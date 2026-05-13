@@ -45,7 +45,26 @@ if errorlevel 1 (
     exit /b 1
 )
 
-:: ── 4. Register daily Task Scheduler job ────────────────────────────────────
+:: ── 4. Check git & configure repo remote ────────────────────────────────────
+echo.
+echo [3/5] Configuring git...
+git --version >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] Git not found. Please install Git from https://git-scm.com/download/win
+    pause
+    exit /b 1
+)
+cd /d "%SCRIPT_DIR%"
+git init >nul 2>&1
+git checkout -b main >nul 2>&1
+git remote remove origin >nul 2>&1
+for /f "tokens=2 delims==" %%T in ('findstr "GITHUB_TOKEN" "%SCRIPT_DIR%config.env"') do set GH_TOKEN=%%T
+for /f "tokens=2 delims==" %%U in ('findstr "GITHUB_USER"  "%SCRIPT_DIR%config.env"') do set GH_USER=%%U
+for /f "tokens=2 delims==" %%R in ('findstr "GITHUB_REPO"  "%SCRIPT_DIR%config.env"') do set GH_REPO=%%R
+git remote add origin https://%GH_USER%:%GH_TOKEN%@github.com/%GH_USER%/%GH_REPO%.git
+echo [OK] Git remote configured.
+
+:: ── 5. Register daily Task Scheduler job ────────────────────────────────────
 echo.
 echo [3/3] Registering daily Task Scheduler job at %RUN_TIME%...
 

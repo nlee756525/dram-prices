@@ -1,19 +1,23 @@
 """
 DRAMeXchange spot price scraper
-Appends daily data to history.json and regenerates dram_prices.html
+Appends daily data to history.json, regenerates index.html, pushes to GitHub Pages.
 """
 
 import json
 import sys
+import base64
 import logging
+import urllib.request
+import urllib.error
 from datetime import datetime
 from pathlib import Path
 from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
 URL          = "https://www.dramexchange.com/"
 BASE_DIR     = Path(__file__).parent
-OUTPUT_HTML  = BASE_DIR / "dram_prices.html"
+OUTPUT_HTML  = BASE_DIR / "index.html"
 HISTORY_FILE = BASE_DIR / "history.json"
+CONFIG_FILE  = BASE_DIR / "config.env"
 LOG_FILE     = BASE_DIR / "scraper.log"
 
 logging.basicConfig(
@@ -23,7 +27,81 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-TODAY = datetime.now().strftime("%-m/%-d/%Y")   # e.g. 5/13/2026
+TODAY = datetime.now().strftime("%-m/%-d/%Y")
+
+
+# ── config ────────────────────────────────────────────────────────────────────
+
+def load_config() -> dict:
+    """Read key=value pairs from config.env."""
+    cfg = {}
+    if CONFIG_FILE.exists():
+        for line in CONFIG_FILE.read_text().splitlines():
+            line = line.strip()
+            if line and "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                cfg[k.strip()] = v.strip()
+    return cfg
+
+
+# ── GitHub API ────────────────────────────────────────────────────────────────
+
+def github_put(token: str, owner: str, repo: str, path: str,
+               content: str, message: str):
+    """Create or update a file in a GitHub repo via the Contents API."""
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json",
+    }
+
+    # Fetch current SHA (needed for updates)
+    sha = ""
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req) as resp:
+            sha = json.loads(resp.read()).get("sha", "")
+    except urllib.error.HTTPError as e:
+        if e.code != 404:
+            log.warning("GitHub GET %s → %s", path, e.code)
+
+    payload = {
+        "message": message,
+        "content": base64.b64encode(content.encode("utf-8")).decode(),
+    }
+    if sha:
+        payload["sha"] = sha
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode(),
+        headers=headers,
+        method="PUT",
+    )
+    try:
+        with urllib.request.urlopen(req) as resp:
+            log.info("GitHub ← %s  %s", resp.status, path)
+    except urllib.error.HTTPError as e:
+        log.error("GitHub PUT %s → %s  %s", path, e.code, e.read().decode())
+
+
+def push_to_github(html: str, history: dict):
+    cfg = load_config()
+    token = cfg.get("GITHUB_TOKEN")
+    owner = cfg.get("GITHUB_USER")
+    repo  = cfg.get("GITHUB_REPO")
+
+    if not all([token, owner, repo]):
+        log.warning("GitHub push skipped — config.env missing TOKEN/USER/REPO")
+        return
+
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    github_put(token, owner, repo, "index.html",
+               html, f"Price update {date_str}")
+    github_put(token, owner, repo, "history.json",
+               json.dumps(history, indent=2), f"History update {date_str}")
+    log.info("Pushed to https://%s.github.io/%s/", owner, repo)
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -117,7 +195,7 @@ def scrape() -> dict:
     return result
 
 
-# ── history management ────────────────────────────────────────────────────────
+# ── history ───────────────────────────────────────────────────────────────────
 
 def load_history() -> dict:
     if HISTORY_FILE.exists():
@@ -136,7 +214,7 @@ def append_to_history(history: dict, scraped: dict):
             continue
         existing_dates = {r["date"] for r in history[key]}
         if entry["date"] in existing_dates:
-            log.info("%s: entry for %s already exists — skipping", key, entry["date"])
+            log.info("%s: %s already recorded — skipping", key, entry["date"])
         else:
             history[key].append(entry)
             log.info("%s: appended %s", key, entry["date"])
@@ -162,27 +240,25 @@ def render_table(rows: list, columns: list) -> str:
         cls   = change_class(chg)
         arrow = "▲ " if cls == "up" else ("▼ " if cls == "down" else "")
         cells = [f"<td>{row.get('date','')}</td>"]
-        for key in list(row.keys())[1:-1]:   # all keys except date and session_change
+        keys  = [k for k in row.keys() if k not in ("date", "session_change")]
+        for key in keys:
             cells.append(f"<td>{row[key]}</td>")
         cells.append(f"<td class='chg {cls}'>{arrow}{chg}</td>")
         body_rows.append(f"<tr>{''.join(cells)}</tr>")
-    return f"""
-    <table>
-      <thead><tr>{headers}</tr></thead>
-      <tbody>{''.join(body_rows)}</tbody>
-    </table>"""
+    return (
+        f"<table>"
+        f"<thead><tr>{headers}</tr></thead>"
+        f"<tbody>{''.join(body_rows)}</tbody>"
+        f"</table>"
+    )
 
 
 def build_html(history: dict) -> str:
     updated   = datetime.now().strftime("%B %d, %Y  %H:%M")
-    ddr5_rows = history.get("ddr5", [])
-    tlc_rows  = history.get("tlc",  [])
-
-    ddr5_cols = ["Date", "Daily High", "Daily Low", "Session High", "Session Low", "Session Average", "Session Change"]
-    tlc_cols  = ["Date", "Weekly High", "Weekly Low", "Session High", "Session Low", "Session Average", "Session Change"]
-
-    ddr5_table = render_table(ddr5_rows, ddr5_cols)
-    tlc_table  = render_table(tlc_rows,  tlc_cols)
+    ddr5_cols = ["Date","Daily High","Daily Low","Session High","Session Low","Session Average","Session Change"]
+    tlc_cols  = ["Date","Weekly High","Weekly Low","Session High","Session Low","Session Average","Session Change"]
+    ddr5_table = render_table(history.get("ddr5", []), ddr5_cols)
+    tlc_table  = render_table(history.get("tlc",  []), tlc_cols)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -192,135 +268,67 @@ def build_html(history: dict) -> str:
   <title>DRAM Spot Prices — {updated}</title>
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-
-    body {{
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
-      min-height: 100vh;
-      padding: 2rem 1.5rem 3rem;
-    }}
-
+    body {{ font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; padding: 2rem 1.5rem 3rem; }}
     header {{ text-align: center; margin-bottom: 2.2rem; }}
     header h1 {{ font-size: 1.75rem; font-weight: 700; color: #f8fafc; }}
     .subtitle {{ font-size: .77rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; margin-top: .3rem; }}
-
     .badges {{ margin-top: .85rem; display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; }}
-    .badge {{
-      padding: .3rem 1rem; border-radius: 999px;
-      font-size: .78rem; font-weight: 500;
-    }}
-    .badge-date   {{ background: #1e293b; border: 1px solid #334155; color: #7dd3fc; }}
+    .badge {{ padding: .3rem 1rem; border-radius: 999px; font-size: .78rem; font-weight: 500; }}
+    .badge-date {{ background: #1e293b; border: 1px solid #334155; color: #7dd3fc; }}
     .badge-source {{ background: #0c1a2e; border: 1px solid #1d4ed8; color: #60a5fa; text-decoration: none; }}
     .badge-source:hover {{ border-color: #3b82f6; }}
-
-    /* ── section ── */
     .section {{ max-width: 980px; margin: 0 auto 2.5rem; }}
-
-    .section-header {{
-      display: flex; align-items: center; gap: .75rem;
-      margin-bottom: .9rem;
-    }}
-    .chip {{
-      padding: .22rem .65rem; border-radius: 6px;
-      font-size: .68rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .5px;
-    }}
+    .section-header {{ display: flex; align-items: center; gap: .75rem; margin-bottom: .9rem; }}
+    .chip {{ padding: .22rem .65rem; border-radius: 6px; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }}
     .chip-dram {{ background: #1d4ed8; color: #bfdbfe; }}
     .chip-nand {{ background: #065f46; color: #a7f3d0; }}
     .section-header h2 {{ font-size: 1.05rem; font-weight: 600; color: #f1f5f9; }}
     .section-header .sub {{ font-size: .75rem; color: #64748b; margin-left: .15rem; }}
-
-    /* ── table ── */
     .table-wrap {{ overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }}
-
     table {{ width: 100%; border-collapse: collapse; font-size: .875rem; }}
-
-    thead tr {{
-      background: #1e3a5f;
-    }}
-    thead th {{
-      padding: .7rem 1rem;
-      text-align: right; font-weight: 600; font-size: .72rem;
-      text-transform: uppercase; letter-spacing: .5px;
-      color: #93c5fd; white-space: nowrap;
-      border-bottom: 2px solid #334155;
-    }}
+    thead tr {{ background: #1e3a5f; }}
+    thead th {{ padding: .7rem 1rem; text-align: right; font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: #93c5fd; white-space: nowrap; border-bottom: 2px solid #334155; }}
     thead th:first-child {{ text-align: left; }}
-
     tbody tr:nth-child(odd)  {{ background: #141b2d; }}
     tbody tr:nth-child(even) {{ background: #1a2438; }}
     tbody tr:hover           {{ background: #1e3050; }}
-
     tbody tr:last-child td {{ border-bottom: none; }}
-
-    tbody td {{
-      padding: .6rem 1rem;
-      text-align: right;
-      border-bottom: 1px solid #1e293b;
-      font-variant-numeric: tabular-nums;
-      color: #cbd5e1;
-      white-space: nowrap;
-    }}
+    tbody td {{ padding: .6rem 1rem; text-align: right; border-bottom: 1px solid #1e293b; font-variant-numeric: tabular-nums; color: #cbd5e1; white-space: nowrap; }}
     tbody td:first-child {{ text-align: left; color: #94a3b8; font-size: .82rem; }}
-
-    .chg       {{ font-weight: 700; }}
-    .chg.up    {{ color: #4ade80; }}
-    .chg.down  {{ color: #f87171; }}
-    .chg.flat  {{ color: #94a3b8; }}
-
-    .empty {{ color: #475569; padding: 1rem; }}
-
-    footer {{
-      text-align: center; font-size: .72rem; color: #475569; margin-top: 1rem;
-    }}
+    .chg {{ font-weight: 700; }}
+    .chg.up   {{ color: #4ade80; }}
+    .chg.down {{ color: #f87171; }}
+    .chg.flat {{ color: #94a3b8; }}
+    footer {{ text-align: center; font-size: .72rem; color: #475569; margin-top: 1rem; }}
     footer a {{ color: #60a5fa; text-decoration: none; }}
-    footer a:hover {{ text-decoration: underline; }}
   </style>
 </head>
 <body>
-
 <header>
   <div class="subtitle">Spot Price Report</div>
   <h1>DRAM &amp; NAND Flash Prices</h1>
   <div class="badges">
     <span class="badge badge-date">Last updated: {updated}</span>
-    <a class="badge badge-source" href="https://www.dramexchange.com/" target="_blank" rel="noopener">
-      DRAMeXchange / TrendForce
-    </a>
+    <a class="badge badge-source" href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
   </div>
 </header>
-
-<!-- DDR5 table -->
 <div class="section">
   <div class="section-header">
     <span class="chip chip-dram">DRAM</span>
     <h2>DDR5 16Gb (2Gx8)</h2>
     <span class="sub">4800 / 5600 MHz</span>
   </div>
-  <div class="table-wrap">
-    {ddr5_table}
-  </div>
+  <div class="table-wrap">{ddr5_table}</div>
 </div>
-
-<!-- 512Gb TLC table -->
 <div class="section">
   <div class="section-header">
     <span class="chip chip-nand">NAND</span>
     <h2>512Gb TLC</h2>
     <span class="sub">NAND Flash Wafer</span>
   </div>
-  <div class="table-wrap">
-    {tlc_table}
-  </div>
+  <div class="table-wrap">{tlc_table}</div>
 </div>
-
-<footer>
-  <p>Prices in USD per chip/wafer · Auto-refreshed daily at 08:45 ·
-    <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange</a>
-  </p>
-</footer>
-
+<footer><p>Prices in USD · Auto-refreshed daily at 08:45 · <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange</a></p></footer>
 </body>
 </html>"""
 
@@ -336,4 +344,5 @@ if __name__ == "__main__":
     html = build_html(history)
     OUTPUT_HTML.write_text(html, encoding="utf-8")
     log.info("Dashboard written → %s", OUTPUT_HTML)
+    push_to_github(html, history)
     log.info("=== Done ===")
