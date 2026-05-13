@@ -1,0 +1,339 @@
+"""
+DRAMeXchange spot price scraper
+Appends daily data to history.json and regenerates dram_prices.html
+"""
+
+import json
+import sys
+import logging
+from datetime import datetime
+from pathlib import Path
+from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+
+URL          = "https://www.dramexchange.com/"
+BASE_DIR     = Path(__file__).parent
+OUTPUT_HTML  = BASE_DIR / "dram_prices.html"
+HISTORY_FILE = BASE_DIR / "history.json"
+LOG_FILE     = BASE_DIR / "scraper.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s  %(levelname)s  %(message)s",
+    handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler(sys.stdout)],
+)
+log = logging.getLogger(__name__)
+
+TODAY = datetime.now().strftime("%-m/%-d/%Y")   # e.g. 5/13/2026
+
+
+# ── helpers ───────────────────────────────────────────────────────────────────
+
+def cell_text(cell) -> str:
+    text = cell.inner_text().strip()
+    if text:
+        return text
+    for locator in [cell, *cell.locator("*").all()[:4]]:
+        for attr in ("title", "alt", "data-value"):
+            val = locator.get_attribute(attr)
+            if val and val.strip():
+                return val.strip()
+    return "N/A"
+
+
+def extract_row(page, search_text: str) -> dict:
+    row   = page.locator("tr").filter(has_text=search_text).first
+    cells = row.locator("td").all()
+    if len(cells) < 6:
+        raise ValueError(f"Row '{search_text}' only has {len(cells)} cells")
+    return {
+        "col1": cell_text(cells[1]),
+        "col2": cell_text(cells[2]),
+        "col3": cell_text(cells[3]),
+        "col4": cell_text(cells[4]),
+        "col5": cell_text(cells[5]),
+        "col6": cell_text(cells[6]) if len(cells) > 6 else "N/A",
+    }
+
+
+# ── scraper ───────────────────────────────────────────────────────────────────
+
+def scrape() -> dict:
+    result = {"ddr5": None, "tlc": None}
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            viewport={"width": 1280, "height": 900},
+        )
+        page = context.new_page()
+        log.info("Loading %s …", URL)
+        try:
+            page.goto(URL, wait_until="networkidle", timeout=60_000)
+        except PWTimeout:
+            page.wait_for_load_state("domcontentloaded")
+        try:
+            page.wait_for_selector("text=DRAM Spot Price", timeout=30_000)
+        except PWTimeout:
+            log.error("Price tables not found — aborting")
+            browser.close()
+            return result
+        page.wait_for_timeout(2_000)
+
+        try:
+            r = extract_row(page, "4800/5600")
+            result["ddr5"] = {
+                "date":           TODAY,
+                "daily_high":     f"${r['col1']}",
+                "daily_low":      f"${r['col2']}",
+                "session_high":   f"${r['col3']}",
+                "session_low":    f"${r['col4']}",
+                "session_avg":    f"${r['col5']}",
+                "session_change": r["col6"],
+            }
+            log.info("DDR5  → %s", result["ddr5"])
+        except Exception as e:
+            log.error("DDR5 extraction failed: %s", e)
+
+        try:
+            r = extract_row(page, "512Gb TLC")
+            result["tlc"] = {
+                "date":           TODAY,
+                "weekly_high":    f"${r['col1']}",
+                "weekly_low":     f"${r['col2']}",
+                "session_high":   f"${r['col3']}",
+                "session_low":    f"${r['col4']}",
+                "session_avg":    f"${r['col5']}",
+                "session_change": r["col6"],
+            }
+            log.info("TLC   → %s", result["tlc"])
+        except Exception as e:
+            log.error("512Gb TLC extraction failed: %s", e)
+
+        browser.close()
+    return result
+
+
+# ── history management ────────────────────────────────────────────────────────
+
+def load_history() -> dict:
+    if HISTORY_FILE.exists():
+        return json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
+    return {"ddr5": [], "tlc": []}
+
+
+def save_history(history: dict):
+    HISTORY_FILE.write_text(json.dumps(history, indent=2), encoding="utf-8")
+
+
+def append_to_history(history: dict, scraped: dict):
+    for key in ("ddr5", "tlc"):
+        entry = scraped.get(key)
+        if not entry:
+            continue
+        existing_dates = {r["date"] for r in history[key]}
+        if entry["date"] in existing_dates:
+            log.info("%s: entry for %s already exists — skipping", key, entry["date"])
+        else:
+            history[key].append(entry)
+            log.info("%s: appended %s", key, entry["date"])
+
+
+# ── HTML renderer ─────────────────────────────────────────────────────────────
+
+def change_class(val: str) -> str:
+    v = val.replace("%", "").replace(" ", "")
+    try:
+        return "up" if float(v) > 0 else ("down" if float(v) < 0 else "flat")
+    except ValueError:
+        return "up" if "+" in val else ("down" if "-" in val else "flat")
+
+
+def render_table(rows: list, columns: list) -> str:
+    if not rows:
+        return "<p class='empty'>No data yet.</p>"
+    headers = "".join(f"<th>{c}</th>" for c in columns)
+    body_rows = []
+    for row in reversed(rows):
+        chg   = row.get("session_change", "N/A")
+        cls   = change_class(chg)
+        arrow = "▲ " if cls == "up" else ("▼ " if cls == "down" else "")
+        cells = [f"<td>{row.get('date','')}</td>"]
+        for key in list(row.keys())[1:-1]:   # all keys except date and session_change
+            cells.append(f"<td>{row[key]}</td>")
+        cells.append(f"<td class='chg {cls}'>{arrow}{chg}</td>")
+        body_rows.append(f"<tr>{''.join(cells)}</tr>")
+    return f"""
+    <table>
+      <thead><tr>{headers}</tr></thead>
+      <tbody>{''.join(body_rows)}</tbody>
+    </table>"""
+
+
+def build_html(history: dict) -> str:
+    updated   = datetime.now().strftime("%B %d, %Y  %H:%M")
+    ddr5_rows = history.get("ddr5", [])
+    tlc_rows  = history.get("tlc",  [])
+
+    ddr5_cols = ["Date", "Daily High", "Daily Low", "Session High", "Session Low", "Session Average", "Session Change"]
+    tlc_cols  = ["Date", "Weekly High", "Weekly Low", "Session High", "Session Low", "Session Average", "Session Change"]
+
+    ddr5_table = render_table(ddr5_rows, ddr5_cols)
+    tlc_table  = render_table(tlc_rows,  tlc_cols)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DRAM Spot Prices — {updated}</title>
+  <style>
+    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+
+    body {{
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1.5rem 3rem;
+    }}
+
+    header {{ text-align: center; margin-bottom: 2.2rem; }}
+    header h1 {{ font-size: 1.75rem; font-weight: 700; color: #f8fafc; }}
+    .subtitle {{ font-size: .77rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; margin-top: .3rem; }}
+
+    .badges {{ margin-top: .85rem; display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; }}
+    .badge {{
+      padding: .3rem 1rem; border-radius: 999px;
+      font-size: .78rem; font-weight: 500;
+    }}
+    .badge-date   {{ background: #1e293b; border: 1px solid #334155; color: #7dd3fc; }}
+    .badge-source {{ background: #0c1a2e; border: 1px solid #1d4ed8; color: #60a5fa; text-decoration: none; }}
+    .badge-source:hover {{ border-color: #3b82f6; }}
+
+    /* ── section ── */
+    .section {{ max-width: 980px; margin: 0 auto 2.5rem; }}
+
+    .section-header {{
+      display: flex; align-items: center; gap: .75rem;
+      margin-bottom: .9rem;
+    }}
+    .chip {{
+      padding: .22rem .65rem; border-radius: 6px;
+      font-size: .68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px;
+    }}
+    .chip-dram {{ background: #1d4ed8; color: #bfdbfe; }}
+    .chip-nand {{ background: #065f46; color: #a7f3d0; }}
+    .section-header h2 {{ font-size: 1.05rem; font-weight: 600; color: #f1f5f9; }}
+    .section-header .sub {{ font-size: .75rem; color: #64748b; margin-left: .15rem; }}
+
+    /* ── table ── */
+    .table-wrap {{ overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }}
+
+    table {{ width: 100%; border-collapse: collapse; font-size: .875rem; }}
+
+    thead tr {{
+      background: #1e3a5f;
+    }}
+    thead th {{
+      padding: .7rem 1rem;
+      text-align: right; font-weight: 600; font-size: .72rem;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: #93c5fd; white-space: nowrap;
+      border-bottom: 2px solid #334155;
+    }}
+    thead th:first-child {{ text-align: left; }}
+
+    tbody tr:nth-child(odd)  {{ background: #141b2d; }}
+    tbody tr:nth-child(even) {{ background: #1a2438; }}
+    tbody tr:hover           {{ background: #1e3050; }}
+
+    tbody tr:last-child td {{ border-bottom: none; }}
+
+    tbody td {{
+      padding: .6rem 1rem;
+      text-align: right;
+      border-bottom: 1px solid #1e293b;
+      font-variant-numeric: tabular-nums;
+      color: #cbd5e1;
+      white-space: nowrap;
+    }}
+    tbody td:first-child {{ text-align: left; color: #94a3b8; font-size: .82rem; }}
+
+    .chg       {{ font-weight: 700; }}
+    .chg.up    {{ color: #4ade80; }}
+    .chg.down  {{ color: #f87171; }}
+    .chg.flat  {{ color: #94a3b8; }}
+
+    .empty {{ color: #475569; padding: 1rem; }}
+
+    footer {{
+      text-align: center; font-size: .72rem; color: #475569; margin-top: 1rem;
+    }}
+    footer a {{ color: #60a5fa; text-decoration: none; }}
+    footer a:hover {{ text-decoration: underline; }}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="subtitle">Spot Price Report</div>
+  <h1>DRAM &amp; NAND Flash Prices</h1>
+  <div class="badges">
+    <span class="badge badge-date">Last updated: {updated}</span>
+    <a class="badge badge-source" href="https://www.dramexchange.com/" target="_blank" rel="noopener">
+      DRAMeXchange / TrendForce
+    </a>
+  </div>
+</header>
+
+<!-- DDR5 table -->
+<div class="section">
+  <div class="section-header">
+    <span class="chip chip-dram">DRAM</span>
+    <h2>DDR5 16Gb (2Gx8)</h2>
+    <span class="sub">4800 / 5600 MHz</span>
+  </div>
+  <div class="table-wrap">
+    {ddr5_table}
+  </div>
+</div>
+
+<!-- 512Gb TLC table -->
+<div class="section">
+  <div class="section-header">
+    <span class="chip chip-nand">NAND</span>
+    <h2>512Gb TLC</h2>
+    <span class="sub">NAND Flash Wafer</span>
+  </div>
+  <div class="table-wrap">
+    {tlc_table}
+  </div>
+</div>
+
+<footer>
+  <p>Prices in USD per chip/wafer · Auto-refreshed daily at 08:45 ·
+    <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange</a>
+  </p>
+</footer>
+
+</body>
+</html>"""
+
+
+# ── entry point ───────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    log.info("=== DRAMeXchange scraper started ===")
+    history = load_history()
+    scraped = scrape()
+    append_to_history(history, scraped)
+    save_history(history)
+    html = build_html(history)
+    OUTPUT_HTML.write_text(html, encoding="utf-8")
+    log.info("Dashboard written → %s", OUTPUT_HTML)
+    log.info("=== Done ===")
