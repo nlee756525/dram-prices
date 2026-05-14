@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DRAM Scraper — Bookmarklet Installer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; padding: 2.5rem 1.5rem 4rem; }
+    h1  { font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: .3rem; }
+    .sub { font-size: .8rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2.5rem; }
+    section { max-width: 680px; margin: 0 auto 2.5rem; }
+    h2  { font-size: 1rem; font-weight: 600; color: #93c5fd; margin-bottom: .9rem; }
+    p, li { font-size: .9rem; color: #94a3b8; line-height: 1.6; }
+    ol  { padding-left: 1.3rem; }
+    li  { margin-bottom: .4rem; }
+    .bm-wrap { background: #1e293b; border: 1px dashed #3b82f6; border-radius: 10px; padding: 1.4rem 1.6rem; display: flex; align-items: center; gap: 1.2rem; margin-bottom: 1rem; }
+    #bm-link { display: inline-block; padding: .55rem 1.2rem; background: #1d4ed8; color: #fff; font-size: .9rem; font-weight: 600; border-radius: 8px; text-decoration: none; white-space: nowrap; cursor: grab; border: 2px solid #3b82f6; user-select: none; }
+    #bm-link:hover { background: #2563eb; }
+    .bm-hint { font-size: .82rem; color: #64748b; }
+    .token-row { display: flex; gap: .6rem; margin-top: .7rem; }
+    input[type=text] { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: .45rem .75rem; color: #e2e8f0; font-size: .875rem; outline: none; }
+    input[type=text]:focus { border-color: #3b82f6; }
+    button { padding: .45rem 1rem; background: #1d4ed8; border: none; border-radius: 6px; color: #fff; font-size: .875rem; font-weight: 600; cursor: pointer; }
+    button:hover { background: #2563eb; }
+    .reset-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: .78rem; padding: .3rem .75rem; }
+    .reset-btn:hover { background: #334155; color: #e2e8f0; }
+    .notice { background: #0c1a2e; border-left: 3px solid #3b82f6; padding: .75rem 1rem; border-radius: 0 6px 6px 0; font-size: .82rem; color: #7dd3fc; margin-top: .8rem; }
+    .tag { display: inline-block; padding: .15rem .5rem; border-radius: 4px; font-size: .72rem; font-weight: 700; background: #065f46; color: #a7f3d0; vertical-align: middle; }
+    footer { text-align: center; font-size: .72rem; color: #475569; margin-top: 1rem; }
+    footer a { color: #60a5fa; text-decoration: none; }
+    #status { display: none; font-size: .82rem; color: #4ade80; margin-top: .5rem; }
+  </style>
+</head>
+<body>
+
+<section style="text-align:center; margin-bottom:2rem;">
+  <h1>DRAM Scraper</h1>
+  <div class="sub">Bookmarklet Installer — runs in your browser on DRAMeXchange</div>
+</section>
+
+<section>
+  <h2>Step 1 &mdash; Enter your GitHub token</h2>
+  <p>Your token is stored locally in <code>localStorage</code> and is never sent anywhere except the GitHub API.</p>
+  <div class="token-row">
+    <input type="text" id="token-input" placeholder="ghp_..." spellcheck="false"/>
+    <button onclick="saveToken()">Save</button>
+  </div>
+  <div id="status">✓ Token saved — bookmarklet is ready to drag!</div>
+</section>
+
+<section>
+  <h2>Step 2 &mdash; Drag this to your bookmarks bar</h2>
+  <div class="bm-wrap">
+    <a id="bm-link" href="#">📊 Update DRAM Prices</a>
+    <span class="bm-hint">← Drag this to your bookmarks bar</span>
+  </div>
+  <p>If you cannot drag it, right-click the link → <em>Bookmark this link</em>.</p>
+  <div class="notice">
+    <strong>Note:</strong> Your bookmarks bar must be visible.
+    In Chrome/Edge press <strong>Ctrl+Shift+B</strong> to show it.
+    In Firefox press <strong>Ctrl+Shift+B</strong> then choose <em>Show Toolbar</em>.
+  </div>
+</section>
+
+<section>
+  <h2>Step 3 &mdash; Use it</h2>
+  <ol>
+    <li>Go to <a href="https://www.dramexchange.com/" target="_blank" rel="noopener" style="color:#60a5fa">dramexchange.com</a> and let the page fully load.</li>
+    <li>Click the <strong>📊 Update DRAM Prices</strong> bookmark.</li>
+    <li>A prompt will ask about the 512Gb TLC row — click <strong>OK</strong> only if it has updated this week, otherwise <strong>Cancel</strong>.</li>
+    <li>Done — the <a href="https://nlee756525.github.io/dram-prices/" target="_blank" rel="noopener" style="color:#60a5fa">live dashboard</a> updates within ~30 seconds.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Reset token</h2>
+  <p>If your GitHub token expires, generate a new one and paste it here.</p>
+  <div class="token-row" style="margin-top:.7rem">
+    <input type="text" id="reset-input" placeholder="ghp_..." spellcheck="false"/>
+    <button class="reset-btn" onclick="resetToken()">Update token</button>
+  </div>
+</section>
+
+<footer>
+  <p>Dashboard: <a href="https://nlee756525.github.io/dram-prices/" target="_blank" rel="noopener">nlee756525.github.io/dram-prices</a></p>
+</footer>
+
+<script>
+// ── Bookmarklet source ────────────────────────────────────────────────────────
+// Written here in readable form; the installer encodes it into the href below.
+
+function bookmarklet() {
+  var OWNER = 'nlee756525', REPO = 'dram-prices';
+  var KEY   = '__dram_gh_token';
+  var token = localStorage.getItem(KEY) ||
+              (prompt('Enter your GitHub token (repo scope):\n\nStored locally in this site\'s localStorage — never shared.') || '').trim();
+  if (!token) return;
+  localStorage.setItem(KEY, token);
+
+  var d     = new Date();
+  var today = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+  var base  = 'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/';
+  var hdrs  = { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+
+  function cellVal(td) {
+    var t = (td.innerText || '').trim();
+    return t || td.title || td.getAttribute('data-value') || '';
+  }
+
+  function findRow(text) {
+    var rows = document.querySelectorAll('tr');
+    for (var i = 0; i < rows.length; i++) {
+      var tds = rows[i].querySelectorAll('td');
+      if (tds.length >= 6 && rows[i].textContent.indexOf(text) !== -1) return tds;
+    }
+    return null;
+  }
+
+  function fmtPrice(v) {
+    var n = parseFloat(v.replace(/[^\d.]/g, ''));
+    return isNaN(n) ? v : '$' + n.toFixed(3);
+  }
+
+  function fmtChg(v) {
+    var n = parseFloat(v.replace(/[^0-9.+-]/g, ''));
+    if (isNaN(n)) return v;
+    return (n > 0 ? '+' : '') + n.toFixed(2) + '%';
+  }
+
+  function chgClass(v) {
+    var n = parseFloat(v.replace(/[^0-9.+-]/g, ''));
+    if (isNaN(n)) return v.indexOf('+') !== -1 ? 'up' : v.indexOf('-') !== -1 ? 'down' : 'flat';
+    return n > 0 ? 'up' : n < 0 ? 'down' : 'flat';
+  }
+
+  // ── Scrape ──────────────────────────────────────────────────────────────────
+  var dtds = findRow('4800/5600');
+  if (!dtds) { alert('DDR5 row not found.\nMake sure the page is fully loaded on dramexchange.com.'); return; }
+
+  var ddr5 = {
+    date: today,
+    daily_high:     fmtPrice(cellVal(dtds[1])),
+    daily_low:      fmtPrice(cellVal(dtds[2])),
+    session_high:   fmtPrice(cellVal(dtds[3])),
+    session_low:    fmtPrice(cellVal(dtds[4])),
+    session_avg:    fmtPrice(cellVal(dtds[5])),
+    session_change: fmtChg(cellVal(dtds[6]))
+  };
+
+  var tlc  = null;
+  var ttds = findRow('512Gb TLC');
+  if (ttds && confirm('Add 512Gb TLC row for ' + today + '?\n\nClick OK only if TLC has updated this week.\nClick Cancel to skip.')) {
+    tlc = {
+      date: today,
+      weekly_high:    fmtPrice(cellVal(ttds[1])),
+      weekly_low:     fmtPrice(cellVal(ttds[2])),
+      session_high:   fmtPrice(cellVal(ttds[3])),
+      session_low:    fmtPrice(cellVal(ttds[4])),
+      session_avg:    fmtPrice(cellVal(ttds[5])),
+      session_change: fmtChg(cellVal(ttds[6]))
+    };
+  }
+
+  // ── GitHub helpers ──────────────────────────────────────────────────────────
+  function ghGet(path) {
+    return fetch(base + path, { headers: hdrs }).then(function(r) { return r.ok ? r.json() : null; });
+  }
+
+  function ghPut(path, content, msg, sha) {
+    var encoded = btoa(unescape(encodeURIComponent(content)));
+    var body    = { message: msg, content: encoded };
+    if (sha) body.sha = sha;
+    return fetch(base + path, { method: 'PUT', headers: hdrs, body: JSON.stringify(body) }).then(function(r) {
+      if (!r.ok) return r.text().then(function(t) { throw new Error(path + ': ' + r.status + ' ' + t); });
+    });
+  }
+
+  // ── Render table ────────────────────────────────────────────────────────────
+  function renderTable(rows, cols) {
+    if (!rows.length) return '<p>No data yet.</p>';
+    var ths  = cols.map(function(c) { return '<th>' + c + '</th>'; }).join('');
+    var trs  = rows.slice().reverse().map(function(row) {
+      var chg  = row.session_change || 'N/A';
+      var cls  = chgClass(chg);
+      var arr  = cls === 'up' ? '▲ ' : cls === 'down' ? '▼ ' : '';
+      var keys = Object.keys(row).filter(function(k) { return k !== 'date' && k !== 'session_change'; });
+      var tds  = ['<td>' + row.date + '</td>'].concat(keys.map(function(k) { return '<td>' + row[k] + '</td>'; }));
+      tds.push('<td class="chg ' + cls + '">' + arr + chg + '</td>');
+      return '<tr>' + tds.join('') + '</tr>';
+    }).join('');
+    return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table>';
+  }
+
+  // ── Main flow ───────────────────────────────────────────────────────────────
+  ghGet('history.json').then(function(hFile) {
+    if (!hFile) { alert('Failed to fetch history.json — check your token.'); return; }
+    var history = JSON.parse(atob(hFile.content.replace(/\n/g, '')));
+
+    var added = [];
+    if (!history.ddr5.find(function(r) { return r.date === today; })) { history.ddr5.push(ddr5); added.push('DDR5'); }
+    if (tlc && !history.tlc.find(function(r) { return r.date === today; })) { history.tlc.push(tlc); added.push('TLC'); }
+    if (!added.length) { alert(today + ' is already recorded — nothing to add.'); return; }
+
+    var now = new Date();
+    var updated = now.toLocaleString('en-US', { month: 'long', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    var ddr5Cols = ['Date','Daily High','Daily Low','Session High','Session Low','Session Average','Session Change'];
+    var tlcCols  = ['Date','Weekly High','Weekly Low','Session High','Session Low','Session Average','Session Change'];
+    var css = "*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh;padding:2rem 1.5rem 3rem}header{text-align:center;margin-bottom:2.2rem}header h1{font-size:1.75rem;font-weight:700;color:#f8fafc}.subtitle{font-size:.77rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1.2px;margin-top:.3rem}.badges{margin-top:.85rem;display:flex;justify-content:center;gap:.6rem;flex-wrap:wrap}.badge{padding:.3rem 1rem;border-radius:999px;font-size:.78rem;font-weight:500}.badge-date{background:#1e293b;border:1px solid #334155;color:#7dd3fc}.badge-source{background:#0c1a2e;border:1px solid #1d4ed8;color:#60a5fa;text-decoration:none}.badge-source:hover{border-color:#3b82f6}.section{max-width:980px;margin:0 auto 2.5rem}.section-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.9rem}.chip{padding:.22rem .65rem;border-radius:6px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px}.chip-dram{background:#1d4ed8;color:#bfdbfe}.chip-nand{background:#065f46;color:#a7f3d0}.section-header h2{font-size:1.05rem;font-weight:600;color:#f1f5f9}.section-header .sub{font-size:.75rem;color:#64748b;margin-left:.15rem}.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid #334155}table{width:100%;border-collapse:collapse;font-size:.875rem}thead tr{background:#1e3a5f}thead th{padding:.7rem 1rem;text-align:right;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#93c5fd;white-space:nowrap;border-bottom:2px solid #334155}thead th:first-child{text-align:left}tbody tr:nth-child(odd){background:#141b2d}tbody tr:nth-child(even){background:#1a2438}tbody tr:hover{background:#1e3050}tbody tr:last-child td{border-bottom:none}tbody td{padding:.6rem 1rem;text-align:right;border-bottom:1px solid #1e293b;font-variant-numeric:tabular-nums;color:#cbd5e1;white-space:nowrap}tbody td:first-child{text-align:left;color:#94a3b8;font-size:.82rem}.chg{font-weight:700}.chg.up{color:#4ade80}.chg.down{color:#f87171}.chg.flat{color:#94a3b8}footer{text-align:center;font-size:.72rem;color:#475569;margin-top:1rem}footer a{color:#60a5fa;text-decoration:none}";
+
+    var html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+      + '  <meta charset="UTF-8"/>\n'
+      + '  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>\n'
+      + '  <title>DRAM Spot Prices — ' + updated + '</title>\n'
+      + '  <style>' + css + '</style>\n'
+      + '</head>\n<body>\n'
+      + '<header>\n'
+      + '  <div class="subtitle">Spot Price Report</div>\n'
+      + '  <h1>DRAM &amp; NAND Flash Prices</h1>\n'
+      + '  <div class="badges">\n'
+      + '    <span class="badge badge-date">Last updated: ' + updated + '</span>\n'
+      + '    <a class="badge badge-source" href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>\n'
+      + '  </div>\n'
+      + '</header>\n'
+      + '<div class="section">\n'
+      + '  <div class="section-header">\n'
+      + '    <span class="chip chip-dram">DRAM</span>\n'
+      + '    <h2>DDR5 16Gb (2Gx8)</h2>\n'
+      + '    <span class="sub">4800 / 5600 MHz</span>\n'
+      + '  </div>\n'
+      + '  <div class="table-wrap">' + renderTable(history.ddr5, ddr5Cols) + '</div>\n'
+      + '</div>\n'
+      + '<div class="section">\n'
+      + '  <div class="section-header">\n'
+      + '    <span class="chip chip-nand">NAND</span>\n'
+      + '    <h2>512Gb TLC</h2>\n'
+      + '    <span class="sub">NAND Flash Wafer</span>\n'
+      + '  </div>\n'
+      + '  <div class="table-wrap">' + renderTable(history.tlc, tlcCols) + '</div>\n'
+      + '</div>\n'
+      + '<footer><p>Prices in USD · <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange</a></p></footer>\n'
+      + '</body>\n</html>';
+
+    return ghGet('index.html').then(function(iFile) {
+      return ghPut('history.json', JSON.stringify(history, null, 2), 'History update ' + today, hFile.sha)
+        .then(function() { return ghPut('index.html', html, 'Price update ' + today, iFile ? iFile.sha : ''); })
+        .then(function() { alert('✅ Updated: ' + added.join(', ') + '\n\nhttps://' + OWNER + '.github.io/' + REPO + '/'); })
+        .catch(function(e) { alert('❌ Push failed: ' + e.message); });
+    });
+  });
+}
+
+// ── Installer logic ───────────────────────────────────────────────────────────
+function buildHref(token) {
+  var src = '(' + bookmarklet.toString() + ')();';
+  return 'javascript:void(' + encodeURIComponent(src) + ')';
+}
+
+function saveToken() {
+  var token = document.getElementById('token-input').value.trim();
+  if (!token) { alert('Please enter a token first.'); return; }
+  localStorage.setItem('__dram_installer_token', token);
+  document.getElementById('bm-link').href = buildHref(token);
+  document.getElementById('status').style.display = 'block';
+}
+
+function resetToken() {
+  var token = document.getElementById('reset-input').value.trim();
+  if (!token) { alert('Please enter a token first.'); return; }
+  localStorage.setItem('__dram_installer_token', token);
+  document.getElementById('bm-link').href = buildHref(token);
+  alert('Token updated — re-drag the bookmark to your bar to get the new version.');
+}
+
+// Restore token on load
+(function () {
+  var stored = localStorage.getItem('__dram_installer_token');
+  if (stored) {
+    document.getElementById('token-input').value = stored;
+    document.getElementById('bm-link').href = buildHref(stored);
+    document.getElementById('status').style.display = 'block';
+  }
+})();
+</script>
+</body>
+</html>
