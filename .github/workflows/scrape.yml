@@ -1,0 +1,31 @@
+name: Scrape DRAM Prices
+
+on:
+  schedule:
+    - cron: '45 13 * * 1-5'   # 08:45 AM EST (13:45 UTC) Mon–Fri
+  workflow_dispatch:            # allow manual run from GitHub Actions tab
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: Scrape and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: nlee756525
+          GITHUB_REPO: dram-prices
+        run: python scrape.py
