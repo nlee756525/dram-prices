@@ -1,107 +1,95 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 
 :: ── DRAMeXchange Scraper — One-click setup for Windows ───────────────────────
-:: Run this once. It will:
+:: Run once as Administrator. It will:
 ::   1. Install Python dependencies (Playwright)
-::   2. Download the Chromium browser used for scraping
-::   3. Register a daily Task Scheduler job at 18:30
+::   2. Download Chromium to C:\PlaywrightBrowsers  (shared, accessible to SYSTEM)
+::   3. Register a daily Task Scheduler job that runs whether you are logged in or not
+::      and can wake the PC from sleep to run
 
 set SCRIPT_DIR=%~dp0
 set SCRIPT=%SCRIPT_DIR%scrape.py
+set WRAPPER=%SCRIPT_DIR%run_scraper.bat
 set TASK_NAME=DRAMeXchange Scraper
 set RUN_TIME=08:45
+set BROWSERS_PATH=C:\PlaywrightBrowsers
 
 echo.
 echo ============================================================
-echo  DRAMeXchange Scraper — Setup
+echo  DRAMeXchange Scraper — Setup  (run as Administrator)
 echo ============================================================
 echo.
 
 :: ── 1. Check Python ──────────────────────────────────────────────────────────
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Python not found. Please install Python 3.8+ from https://python.org
-    pause
-    exit /b 1
+    echo [ERROR] Python not found. Install Python 3.8+ from https://python.org
+    pause & exit /b 1
 )
+for /f "delims=" %%i in ('where python') do set PYTHON_EXE=%%i
+echo [OK] Python: %PYTHON_EXE%
 
 :: ── 2. Install Playwright ────────────────────────────────────────────────────
+echo.
 echo [1/3] Installing Playwright...
 pip install playwright
-if errorlevel 1 (
-    echo [ERROR] pip install failed. Make sure pip is available.
-    pause
-    exit /b 1
-)
+if errorlevel 1 ( echo [ERROR] pip install failed. & pause & exit /b 1 )
 
-:: ── 3. Download Chromium ─────────────────────────────────────────────────────
+:: ── 3. Download Chromium to shared location ──────────────────────────────────
 echo.
-echo [2/3] Downloading Chromium browser (one-time, ~200 MB)...
+echo [2/3] Downloading Chromium to %BROWSERS_PATH% (one-time, ~200 MB)...
+set PLAYWRIGHT_BROWSERS_PATH=%BROWSERS_PATH%
 python -m playwright install chromium
-if errorlevel 1 (
-    echo [ERROR] Playwright browser install failed.
-    pause
-    exit /b 1
-)
+if errorlevel 1 ( echo [ERROR] Playwright browser install failed. & pause & exit /b 1 )
+echo [OK] Chromium installed at %BROWSERS_PATH%
 
-:: ── 4. Check git & configure repo remote ────────────────────────────────────
+:: ── 4. Register Task Scheduler job via PowerShell ────────────────────────────
 echo.
-echo [3/5] Configuring git...
-git --version >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] Git not found. Please install Git from https://git-scm.com/download/win
-    pause
-    exit /b 1
-)
-cd /d "%SCRIPT_DIR%"
-git init >nul 2>&1
-git checkout -b main >nul 2>&1
-git remote remove origin >nul 2>&1
-for /f "tokens=2 delims==" %%T in ('findstr "GITHUB_TOKEN" "%SCRIPT_DIR%config.env"') do set GH_TOKEN=%%T
-for /f "tokens=2 delims==" %%U in ('findstr "GITHUB_USER"  "%SCRIPT_DIR%config.env"') do set GH_USER=%%U
-for /f "tokens=2 delims==" %%R in ('findstr "GITHUB_REPO"  "%SCRIPT_DIR%config.env"') do set GH_REPO=%%R
-git remote add origin https://%GH_USER%:%GH_TOKEN%@github.com/%GH_USER%/%GH_REPO%.git
-echo [OK] Git remote configured.
+echo [3/3] Registering Task Scheduler job "%TASK_NAME%"...
+echo       Runs at %RUN_TIME% daily, as SYSTEM (no login needed), wakes from sleep.
 
-:: ── 5. Register daily Task Scheduler job ────────────────────────────────────
-echo.
-echo [3/3] Registering daily Task Scheduler job at %RUN_TIME%...
-
-:: Find the full path to python.exe
-for /f "delims=" %%i in ('where python') do set PYTHON_EXE=%%i
-
-schtasks /create ^
-  /tn "%TASK_NAME%" ^
-  /tr "\"%PYTHON_EXE%\" \"%SCRIPT%\"" ^
-  /sc daily ^
-  /st %RUN_TIME% ^
-  /f ^
-  /rl highest
+powershell -NoProfile -ExecutionPolicy Bypass -Command " ^
+    $action   = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument ('/c \"%WRAPPER%\"'); ^
+    $trigger  = New-ScheduledTaskTrigger -Daily -At '%RUN_TIME%'; ^
+    $settings = New-ScheduledTaskSettingsSet ^
+                    -WakeToRun ^
+                    -RunOnlyIfNetworkAvailable ^
+                    -ExecutionTimeLimit (New-TimeSpan -Minutes 30) ^
+                    -MultipleInstances IgnoreNew ^
+                    -DisallowStartIfOnBatteries:$false ^
+                    -StopIfGoingOnBatteries:$false; ^
+    $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest; ^
+    Register-ScheduledTask -TaskName '%TASK_NAME%' -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null; ^
+    Write-Host '[OK] Task registered.' ^
+"
 
 if errorlevel 1 (
-    echo [WARN] Task Scheduler registration failed. You may need to run this as Administrator.
-    echo        To retry, right-click setup.bat and choose "Run as administrator".
+    echo [WARN] Task registration failed. Make sure you ran this as Administrator.
+    echo        Right-click setup.bat ^> Run as administrator, then try again.
 ) else (
     echo [OK] Task "%TASK_NAME%" scheduled daily at %RUN_TIME%.
+    echo      Runs as SYSTEM - no login required.
+    echo      Wakes PC from sleep if needed.
+    echo      NOTE: PC must be ON or SLEEPING (not shut down) to run automatically.
+    echo      Recommended: set Windows power plan to Sleep instead of Shut Down.
 )
 
-:: ── 5. Run scraper immediately ───────────────────────────────────────────────
+:: ── 5. Run scraper now ────────────────────────────────────────────────────────
 echo.
 echo Running scraper now for the first time...
-echo Output: %SCRIPT_DIR%dram_prices.html
-echo.
+set PLAYWRIGHT_BROWSERS_PATH=%BROWSERS_PATH%
 python "%SCRIPT%"
 
 echo.
 echo ============================================================
 echo  Setup complete!
-echo  - Dashboard : %SCRIPT_DIR%dram_prices.html
 echo  - Log file  : %SCRIPT_DIR%scraper.log
-echo  - Runs daily: %RUN_TIME% (Task Scheduler)
+echo  - Runs daily: %RUN_TIME% (Task Scheduler, no login needed)
 echo.
-echo  To change the run time, edit this file and re-run,
-echo  or open Task Scheduler and modify "%TASK_NAME%".
+echo  ALSO RECOMMENDED: Enable the GitHub Actions workflow for
+echo  fully cloud-based scraping (no PC required at all).
+echo  See .github/workflows/scrape.yml in your repo.
 echo ============================================================
 echo.
 pause
