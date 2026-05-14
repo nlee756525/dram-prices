@@ -1,9 +1,10 @@
 name: Scrape DRAM Prices
 
+# Schedule disabled — DRAMeXchange blocks GitHub Actions IPs via Cloudflare.
+# Use the bookmarklet (bookmarklet.html) instead.
+# Manual trigger kept for testing only.
 on:
-  schedule:
-    - cron: '45 13 * * 1-5'   # 08:45 AM EST (13:45 UTC) Mon–Fri
-  workflow_dispatch:            # allow manual run from GitHub Actions tab
+  workflow_dispatch:
 
 jobs:
   scrape:
