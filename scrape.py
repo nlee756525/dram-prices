@@ -4,6 +4,7 @@ Appends daily data to history.json, regenerates index.html, pushes to GitHub Pag
 """
 
 import json
+import os
 import sys
 import base64
 import logging
@@ -27,13 +28,14 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-TODAY = datetime.now().strftime("%-m/%-d/%Y")
+_now  = datetime.now()
+TODAY = f"{_now.month}/{_now.day}/{_now.year}"
 
 
 # ── config ────────────────────────────────────────────────────────────────────
 
 def load_config() -> dict:
-    """Read key=value pairs from config.env."""
+    """Read key=value pairs from config.env, falling back to environment variables."""
     cfg = {}
     if CONFIG_FILE.exists():
         for line in CONFIG_FILE.read_text().splitlines():
@@ -41,6 +43,9 @@ def load_config() -> dict:
             if line and "=" in line and not line.startswith("#"):
                 k, v = line.split("=", 1)
                 cfg[k.strip()] = v.strip()
+    for key in ("GITHUB_TOKEN", "GITHUB_USER", "GITHUB_REPO"):
+        if key not in cfg and os.environ.get(key):
+            cfg[key] = os.environ[key]
     return cfg
 
 
