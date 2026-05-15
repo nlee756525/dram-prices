@@ -1,17 +1,105 @@
 {
   "ddr5": [
-    {"date": "5/1/2026",  "daily_high": "$51.000", "daily_low": "$28.500", "session_high": "$51.000", "session_low": "$28.500", "session_avg": "$39.000",  "session_change": "+0.34%"},
-    {"date": "5/4/2026",  "daily_high": "$51.000", "daily_low": "$28.000", "session_high": "$51.000", "session_low": "$28.000", "session_avg": "$38.833",  "session_change": "-0.43%"},
-    {"date": "5/5/2026",  "daily_high": "$51.000", "daily_low": "$28.000", "session_high": "$51.000", "session_low": "$28.000", "session_avg": "$38.833",  "session_change": "0.00%"},
-    {"date": "5/6/2026",  "daily_high": "$51.000", "daily_low": "$28.000", "session_high": "$51.000", "session_low": "$28.000", "session_avg": "$38.833",  "session_change": "0.00%"},
-    {"date": "5/7/2026",  "daily_high": "$51.000", "daily_low": "$28.000", "session_high": "$51.000", "session_low": "$28.000", "session_avg": "$39.000",  "session_change": "+0.43%"},
-    {"date": "5/8/2026",  "daily_high": "$52.000", "daily_low": "$28.000", "session_high": "$52.000", "session_low": "$29.000", "session_avg": "$39.833",  "session_change": "+2.14%"},
-    {"date": "5/11/2026", "daily_high": "$52.000", "daily_low": "$29.200", "session_high": "$52.000", "session_low": "$29.500", "session_avg": "$40.200",  "session_change": "+0.92%"},
-    {"date": "5/12/2026", "daily_high": "$52.000", "daily_low": "$29.500", "session_high": "$52.000", "session_low": "$29.500", "session_avg": "$40.267",  "session_change": "+0.17%"},
-    {"date": "5/13/2026", "daily_high": "$52.000", "daily_low": "$29.500", "session_high": "$52.000", "session_low": "$29.500", "session_avg": "$40.367",  "session_change": "+0.25%"},
-    {"date": "5/14/2026", "daily_high": "$52.500", "daily_low": "$29.600", "session_high": "$52.500", "session_low": "$30.000", "session_avg": "$40.700",  "session_change": "+0.83%"}
+    {
+      "date": "5/1/2026",
+      "daily_high": "$51.000",
+      "daily_low": "$28.500",
+      "session_high": "$51.000",
+      "session_low": "$28.500",
+      "session_avg": "$39.000",
+      "session_change": "+0.34%"
+    },
+    {
+      "date": "5/4/2026",
+      "daily_high": "$51.000",
+      "daily_low": "$28.000",
+      "session_high": "$51.000",
+      "session_low": "$28.000",
+      "session_avg": "$38.833",
+      "session_change": "-0.43%"
+    },
+    {
+      "date": "5/5/2026",
+      "daily_high": "$51.000",
+      "daily_low": "$28.000",
+      "session_high": "$51.000",
+      "session_low": "$28.000",
+      "session_avg": "$38.833",
+      "session_change": "0.00%"
+    },
+    {
+      "date": "5/6/2026",
+      "daily_high": "$51.000",
+      "daily_low": "$28.000",
+      "session_high": "$51.000",
+      "session_low": "$28.000",
+      "session_avg": "$38.833",
+      "session_change": "0.00%"
+    },
+    {
+      "date": "5/7/2026",
+      "daily_high": "$51.000",
+      "daily_low": "$28.000",
+      "session_high": "$51.000",
+      "session_low": "$28.000",
+      "session_avg": "$39.000",
+      "session_change": "+0.43%"
+    },
+    {
+      "date": "5/8/2026",
+      "daily_high": "$52.000",
+      "daily_low": "$28.000",
+      "session_high": "$52.000",
+      "session_low": "$29.000",
+      "session_avg": "$39.833",
+      "session_change": "+2.14%"
+    },
+    {
+      "date": "5/11/2026",
+      "daily_high": "$52.000",
+      "daily_low": "$29.200",
+      "session_high": "$52.000",
+      "session_low": "$29.500",
+      "session_avg": "$40.200",
+      "session_change": "+0.92%"
+    },
+    {
+      "date": "5/12/2026",
+      "daily_high": "$52.000",
+      "daily_low": "$29.500",
+      "session_high": "$52.000",
+      "session_low": "$29.500",
+      "session_avg": "$40.267",
+      "session_change": "+0.17%"
+    },
+    {
+      "date": "5/13/2026",
+      "daily_high": "$52.000",
+      "daily_low": "$29.500",
+      "session_high": "$52.000",
+      "session_low": "$29.500",
+      "session_avg": "$40.367",
+      "session_change": "+0.25%"
+    },
+    {
+      "date": "5/14/2026",
+      "daily_high": "$52.500",
+      "daily_low": "$29.600",
+      "session_high": "$52.500",
+      "session_low": "$30.000",
+      "session_avg": "$40.700",
+      "session_change": "+0.83%"
+    }
   ],
   "tlc": [
-    {"date": "5/13/2026", "weekly_high": "$21.500", "weekly_low": "$16.000", "session_high": "$21.500", "session_low": "$16.000", "session_avg": "$20.470", "session_change": "-0.57%"}
+    {
+      "date": "5/13/2026",
+      "weekly_high": "$21.500",
+      "weekly_low": "$16.000",
+      "session_high": "$21.500",
+      "session_low": "$16.000",
+      "session_avg": "$20.470",
+      "session_change": "-0.57%"
+    }
   ]
 }
