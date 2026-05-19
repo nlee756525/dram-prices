@@ -111,13 +111,22 @@
   ],
   "tlc": [
     {
-      "date": "5/13/2026",
+      "date": "5/4/2026",
       "weekly_high": "$21.500",
       "weekly_low": "$16.000",
       "session_high": "$21.500",
       "session_low": "$16.000",
-      "session_avg": "$20.470",
+      "session_avg": "$20.472",
       "session_change": "-0.57%"
+    },
+    {
+      "date": "5/11/2026",
+      "weekly_high": "$21.500",
+      "weekly_low": "$16.000",
+      "session_high": "$21.500",
+      "session_low": "$16.000",
+      "session_avg": "$20.541",
+      "session_change": "+0.34%"
     }
   ]
 }
