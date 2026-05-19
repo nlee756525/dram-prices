@@ -1,17 +1,16 @@
 name: Scrape DRAM Prices
 
-# Schedule disabled — DRAMeXchange blocks GitHub Actions IPs via Cloudflare.
-# Use the bookmarklet (bookmarklet.html) instead.
-# Manual trigger kept for testing only.
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '45 13 * * 1-5'  # 8:45 AM ET, weekdays only
+  workflow_dispatch:           # lets you trigger it manually from GitHub
+
+permissions:
+  contents: write
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
       - uses: actions/checkout@v4
 
@@ -19,12 +18,13 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Playwright
+      - name: Install Playwright + Chromium
         run: |
           pip install playwright
-          playwright install chromium --with-deps
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
 
-      - name: Scrape and push
+      - name: Run scraper
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USER: nlee756525
