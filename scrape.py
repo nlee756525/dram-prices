@@ -35,7 +35,6 @@ TODAY = f"{_now.month}/{_now.day}/{_now.year}"
 # ── config ────────────────────────────────────────────────────────────────────
 
 def load_config() -> dict:
-    """Read key=value pairs from config.env, falling back to environment variables."""
     cfg = {}
     if CONFIG_FILE.exists():
         for line in CONFIG_FILE.read_text().splitlines():
@@ -61,7 +60,6 @@ def github_put(token: str, owner: str, repo: str, path: str,
         "Content-Type": "application/json",
     }
 
-    # Fetch current SHA (needed for updates)
     sha = ""
     try:
         req = urllib.request.Request(url, headers=headers)
@@ -92,7 +90,7 @@ def github_put(token: str, owner: str, repo: str, path: str,
 
 
 def push_to_github(html: str, history: dict):
-    cfg = load_config()
+    cfg   = load_config()
     token = cfg.get("GITHUB_TOKEN")
     owner = cfg.get("GITHUB_USER")
     repo  = cfg.get("GITHUB_REPO")
@@ -170,8 +168,8 @@ def scrape() -> dict:
             r = extract_row(page, "4800/5600")
             result["ddr5"] = {
                 "date":           TODAY,
-                "daily_high":     f"${r['col1']}",
-                "daily_low":      f"${r['col2']}",
+                "weekly_high":    f"${r['col1']}",
+                "weekly_low":     f"${r['col2']}",
                 "session_high":   f"${r['col3']}",
                 "session_low":    f"${r['col4']}",
                 "session_avg":    f"${r['col5']}",
@@ -235,19 +233,53 @@ def change_class(val: str) -> str:
         return "up" if "+" in val else ("down" if "-" in val else "flat")
 
 
-def render_table(rows: list, columns: list) -> str:
+def render_latest_card(entry: dict, product_type: str) -> str:
+    if not entry:
+        return "<div class='latest-card empty'><p>No data yet.</p></div>"
+    is_dram  = product_type == "ddr5"
+    card_cls = "dram" if is_dram else "nand"
+    chip_cls = "chip-dram" if is_dram else "chip-nand"
+    chip_txt = "DRAM" if is_dram else "NAND"
+    name     = "DDR5 16Gb (2Gx8)" if is_dram else "512Gb TLC"
+    sub      = "4800 / 5600 MHz"  if is_dram else "NAND Flash Wafer"
+    chg      = entry.get("session_change", "N/A")
+    cls      = change_class(chg)
+    arrow    = "&#9650; " if cls == "up" else ("&#9660; " if cls == "down" else "")
+    return (
+        f"<div class='latest-card {card_cls}'>"
+        f"<div class='card-top'>"
+        f"<div class='card-title-group'>"
+        f"<span class='chip {chip_cls}'>{chip_txt}</span>"
+        f"<div><div class='card-name'>{name}</div><div class='card-sub'>{sub}</div></div>"
+        f"</div>"
+        f"<span class='card-date'>{entry['date']}</span>"
+        f"</div>"
+        f"<div class='stats-grid'>"
+        f"<div class='stat'><div class='stat-label'>Weekly High</div><div class='stat-value'>{entry.get('weekly_high','N/A')}</div></div>"
+        f"<div class='stat'><div class='stat-label'>Weekly Low</div><div class='stat-value'>{entry.get('weekly_low','N/A')}</div></div>"
+        f"<div class='stat'><div class='stat-label'>Session High</div><div class='stat-value'>{entry.get('session_high','N/A')}</div></div>"
+        f"<div class='stat'><div class='stat-label'>Session Low</div><div class='stat-value'>{entry.get('session_low','N/A')}</div></div>"
+        f"<div class='stat'><div class='stat-label'>Session Average</div><div class='stat-value'>{entry.get('session_avg','N/A')}</div></div>"
+        f"<div class='stat'><div class='stat-label'>Average Change</div><div class='stat-value {cls}'>{arrow}{chg}</div></div>"
+        f"</div>"
+        f"</div>"
+    )
+
+
+def render_table(rows: list) -> str:
     if not rows:
         return "<p class='empty'>No data yet.</p>"
-    headers = "".join(f"<th>{c}</th>" for c in columns)
+    cols = ["Date", "Weekly High", "Weekly Low", "Session High",
+            "Session Low", "Session Average", "Average Change"]
+    headers = "".join(f"<th>{c}</th>" for c in cols)
     body_rows = []
     for row in reversed(rows):
         chg   = row.get("session_change", "N/A")
         cls   = change_class(chg)
-        arrow = "▲ " if cls == "up" else ("▼ " if cls == "down" else "")
+        arrow = "&#9650; " if cls == "up" else ("&#9660; " if cls == "down" else "")
         cells = [f"<td>{row.get('date','')}</td>"]
-        keys  = [k for k in row.keys() if k not in ("date", "session_change")]
-        for key in keys:
-            cells.append(f"<td>{row[key]}</td>")
+        for key in ("weekly_high", "weekly_low", "session_high", "session_low", "session_avg"):
+            cells.append(f"<td>{row.get(key,'N/A')}</td>")
         cells.append(f"<td class='chg {cls}'>{arrow}{chg}</td>")
         body_rows.append(f"<tr>{''.join(cells)}</tr>")
     return (
@@ -259,22 +291,30 @@ def render_table(rows: list, columns: list) -> str:
 
 
 def build_html(history: dict) -> str:
-    updated   = datetime.now().strftime("%B %d, %Y  %H:%M")
-    ddr5_cols = ["Date","Daily High","Daily Low","Session High","Session Low","Session Average","Session Change"]
-    tlc_cols  = ["Date","Weekly High","Weekly Low","Session High","Session Low","Session Average","Session Change"]
-    ddr5_table = render_table(history.get("ddr5", []), ddr5_cols)
-    tlc_table  = render_table(history.get("tlc",  []), tlc_cols)
+    now     = datetime.now()
+    updated = f"{now.month}/{now.day}/{now.year}"
+
+    ddr5_rows = history.get("ddr5", [])
+    tlc_rows  = history.get("tlc",  [])
+
+    latest_ddr5 = ddr5_rows[-1] if ddr5_rows else None
+    latest_tlc  = tlc_rows[-1]  if tlc_rows  else None
+
+    ddr5_card  = render_latest_card(latest_ddr5, "ddr5")
+    tlc_card   = render_latest_card(latest_tlc,  "tlc")
+    ddr5_table = render_table(ddr5_rows)
+    tlc_table  = render_table(tlc_rows)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DRAM Spot Prices — {updated}</title>
+  <title>DRAM &amp; NAND Flash Spot Prices</title>
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{ font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; padding: 2rem 1.5rem 3rem; }}
-    header {{ text-align: center; margin-bottom: 2.2rem; }}
+    header {{ text-align: center; margin-bottom: 2.5rem; }}
     header h1 {{ font-size: 1.75rem; font-weight: 700; color: #f8fafc; }}
     .subtitle {{ font-size: .77rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; margin-top: .3rem; }}
     .badges {{ margin-top: .85rem; display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; }}
@@ -282,13 +322,33 @@ def build_html(history: dict) -> str:
     .badge-date {{ background: #1e293b; border: 1px solid #334155; color: #7dd3fc; }}
     .badge-source {{ background: #0c1a2e; border: 1px solid #1d4ed8; color: #60a5fa; text-decoration: none; }}
     .badge-source:hover {{ border-color: #3b82f6; }}
-    .section {{ max-width: 980px; margin: 0 auto 2.5rem; }}
-    .section-header {{ display: flex; align-items: center; gap: .75rem; margin-bottom: .9rem; }}
+    .divider-label {{ max-width: 980px; margin: 0 auto 1rem; display: flex; align-items: center; gap: .75rem; }}
+    .divider-label span {{ font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #475569; white-space: nowrap; }}
+    .divider-label::after {{ content: ''; flex: 1; height: 1px; background: #1e293b; }}
+    .latest-grid {{ max-width: 980px; margin: 0 auto 2.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }}
+    .latest-card {{ border-radius: 12px; padding: 1.25rem 1.5rem; border: 1px solid; }}
+    .latest-card.dram {{ background: #0d1f3c; border-color: #1e40af; }}
+    .latest-card.nand {{ background: #052e16; border-color: #166534; }}
+    .latest-card.empty {{ background: #1e293b; border-color: #334155; color: #64748b; }}
+    .card-top {{ display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; gap: .5rem; flex-wrap: wrap; }}
+    .card-title-group {{ display: flex; align-items: center; gap: .6rem; }}
     .chip {{ padding: .22rem .65rem; border-radius: 6px; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }}
     .chip-dram {{ background: #1d4ed8; color: #bfdbfe; }}
     .chip-nand {{ background: #065f46; color: #a7f3d0; }}
+    .card-name {{ font-size: .95rem; font-weight: 600; color: #f1f5f9; }}
+    .card-sub {{ font-size: .72rem; color: #64748b; margin-top: .1rem; }}
+    .card-date {{ font-size: .74rem; color: #94a3b8; background: #1e293b; border: 1px solid #334155; padding: .2rem .65rem; border-radius: 999px; white-space: nowrap; }}
+    .stats-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }}
+    .stat {{ background: rgba(0,0,0,.3); border-radius: 8px; padding: .65rem .8rem; }}
+    .stat-label {{ font-size: .62rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; margin-bottom: .3rem; }}
+    .stat-value {{ font-size: 1rem; font-weight: 600; color: #e2e8f0; font-variant-numeric: tabular-nums; }}
+    .stat-value.up   {{ color: #4ade80; }}
+    .stat-value.down {{ color: #f87171; }}
+    .stat-value.flat {{ color: #94a3b8; }}
+    .section {{ max-width: 980px; margin: 0 auto 2.5rem; }}
+    .section-header {{ display: flex; align-items: center; gap: .75rem; margin-bottom: .9rem; }}
     .section-header h2 {{ font-size: 1.05rem; font-weight: 600; color: #f1f5f9; }}
-    .section-header .sub {{ font-size: .75rem; color: #64748b; margin-left: .15rem; }}
+    .section-header .sub {{ font-size: .75rem; color: #64748b; }}
     .table-wrap {{ overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }}
     table {{ width: 100%; border-collapse: collapse; font-size: .875rem; }}
     thead tr {{ background: #1e3a5f; }}
@@ -297,15 +357,21 @@ def build_html(history: dict) -> str:
     tbody tr:nth-child(odd)  {{ background: #141b2d; }}
     tbody tr:nth-child(even) {{ background: #1a2438; }}
     tbody tr:hover           {{ background: #1e3050; }}
-    tbody tr:last-child td {{ border-bottom: none; }}
+    tbody tr:first-child td  {{ color: #f1f5f9; font-weight: 500; }}
+    tbody tr:last-child td   {{ border-bottom: none; }}
     tbody td {{ padding: .6rem 1rem; text-align: right; border-bottom: 1px solid #1e293b; font-variant-numeric: tabular-nums; color: #cbd5e1; white-space: nowrap; }}
     tbody td:first-child {{ text-align: left; color: #94a3b8; font-size: .82rem; }}
     .chg {{ font-weight: 700; }}
     .chg.up   {{ color: #4ade80; }}
     .chg.down {{ color: #f87171; }}
     .chg.flat {{ color: #94a3b8; }}
+    .empty {{ color: #475569; font-size: .85rem; padding: 1rem; }}
     footer {{ text-align: center; font-size: .72rem; color: #475569; margin-top: 1rem; }}
     footer a {{ color: #60a5fa; text-decoration: none; }}
+    @media (max-width: 600px) {{
+      .latest-grid {{ grid-template-columns: 1fr; }}
+      .stats-grid  {{ grid-template-columns: repeat(2, 1fr); }}
+    }}
   </style>
 </head>
 <body>
@@ -317,6 +383,14 @@ def build_html(history: dict) -> str:
     <a class="badge badge-source" href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
   </div>
 </header>
+
+<div class="divider-label"><span>Latest Update</span></div>
+<div class="latest-grid">
+{ddr5_card}
+{tlc_card}
+</div>
+
+<div class="divider-label"><span>Price History</span></div>
 <div class="section">
   <div class="section-header">
     <span class="chip chip-dram">DRAM</span>
@@ -333,7 +407,7 @@ def build_html(history: dict) -> str:
   </div>
   <div class="table-wrap">{tlc_table}</div>
 </div>
-<footer><p>Prices in USD · Auto-refreshed daily at 08:45 · <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange</a></p></footer>
+<footer><p>Prices in USD · Source: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a></p></footer>
 </body>
 </html>"""
 
