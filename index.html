@@ -22,14 +22,13 @@
     .latest-card { border-radius: 12px; padding: 1.25rem 1.5rem; border: 1px solid; }
     .latest-card.dram { background: #0d1f3c; border-color: #1e40af; }
     .latest-card.nand { background: #052e16; border-color: #166534; }
-    .latest-card.empty { background: #1e293b; border-color: #334155; color: #64748b; }
     .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; gap: .5rem; flex-wrap: wrap; }
     .card-title-group { display: flex; align-items: center; gap: .6rem; }
     .chip { padding: .22rem .65rem; border-radius: 6px; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
     .chip-dram { background: #1d4ed8; color: #bfdbfe; }
     .chip-nand { background: #065f46; color: #a7f3d0; }
     .card-name { font-size: .95rem; font-weight: 600; color: #f1f5f9; }
-    .card-sub { font-size: .72rem; color: #64748b; margin-top: .1rem; }
+    .card-sub  { font-size: .72rem; color: #64748b; margin-top: .1rem; }
     .card-date { font-size: .74rem; color: #94a3b8; background: #1e293b; border: 1px solid #334155; padding: .2rem .65rem; border-radius: 999px; white-space: nowrap; }
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
     .stat { background: rgba(0,0,0,.3); border-radius: 8px; padding: .65rem .8rem; }
@@ -40,7 +39,7 @@
     .stat-value.flat { color: #94a3b8; }
     .section { max-width: 980px; margin: 0 auto 2.5rem; }
     .section-header { display: flex; align-items: center; gap: .75rem; margin-bottom: .9rem; }
-    .section-header h2 { font-size: 1.05rem; font-weight: 600; color: #f1f5f9; }
+    .section-header h2  { font-size: 1.05rem; font-weight: 600; color: #f1f5f9; }
     .section-header .sub { font-size: .75rem; color: #64748b; }
     .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }
     table { width: 100%; border-collapse: collapse; font-size: .875rem; }
@@ -58,7 +57,6 @@
     .chg.up   { color: #4ade80; }
     .chg.down { color: #f87171; }
     .chg.flat { color: #94a3b8; }
-    .empty { color: #475569; font-size: .85rem; padding: 1rem; }
     footer { text-align: center; font-size: .72rem; color: #475569; margin-top: 1rem; }
     footer a { color: #60a5fa; text-decoration: none; }
     @media (max-width: 600px) {
@@ -68,38 +66,136 @@
   </style>
 </head>
 <body>
+
 <header>
   <div class="subtitle">Spot Price Report</div>
   <h1>DRAM &amp; NAND Flash Prices</h1>
   <div class="badges">
-    <span class="badge badge-date">Last updated: 5/22/2026</span>
+    <span class="badge badge-date" id="badge-date">Loading…</span>
     <a class="badge badge-source" href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
   </div>
 </header>
 
 <div class="divider-label"><span>Latest Update</span></div>
-<div class="latest-grid">
-<div class='latest-card dram'><div class='card-top'><div class='card-title-group'><span class='chip chip-dram'>DRAM</span><div><div class='card-name'>DDR5 16Gb (2Gx8)</div><div class='card-sub'>4800 / 5600 MHz</div></div></div><span class='card-date'>5/22/2026</span></div><div class='stats-grid'><div class='stat'><div class='stat-label'>Weekly High</div><div class='stat-value'>$52.500</div></div><div class='stat'><div class='stat-label'>Weekly Low</div><div class='stat-value'>$30.500</div></div><div class='stat'><div class='stat-label'>Session High</div><div class='stat-value'>$52.500</div></div><div class='stat'><div class='stat-label'>Session Low</div><div class='stat-value'>$30.500</div></div><div class='stat'><div class='stat-label'>Session Average</div><div class='stat-value'>$41.500</div></div><div class='stat'><div class='stat-label'>Average Change</div><div class='stat-value up'>&#9650; +0.40%</div></div></div></div>
-<div class='latest-card nand'><div class='card-top'><div class='card-title-group'><span class='chip chip-nand'>NAND</span><div><div class='card-name'>512Gb TLC</div><div class='card-sub'>NAND Flash Wafer</div></div></div><span class='card-date'>5/11/2026</span></div><div class='stats-grid'><div class='stat'><div class='stat-label'>Weekly High</div><div class='stat-value'>$21.500</div></div><div class='stat'><div class='stat-label'>Weekly Low</div><div class='stat-value'>$16.000</div></div><div class='stat'><div class='stat-label'>Session High</div><div class='stat-value'>$21.500</div></div><div class='stat'><div class='stat-label'>Session Low</div><div class='stat-value'>$16.000</div></div><div class='stat'><div class='stat-label'>Session Average</div><div class='stat-value'>$20.541</div></div><div class='stat'><div class='stat-label'>Average Change</div><div class='stat-value up'>&#9650; +0.34%</div></div></div></div>
-</div>
+<div class="latest-grid" id="latest-grid"></div>
 
 <div class="divider-label"><span>Price History</span></div>
-<div class="section">
-  <div class="section-header">
-    <span class="chip chip-dram">DRAM</span>
-    <h2>DDR5 16Gb (2Gx8)</h2>
-    <span class="sub">4800 / 5600 MHz</span>
-  </div>
-  <div class="table-wrap"><table><thead><tr><th>Date</th><th>Weekly High</th><th>Weekly Low</th><th>Session High</th><th>Session Low</th><th>Session Average</th><th>Average Change</th></tr></thead><tbody><tr><td>5/22/2026</td><td>$52.500</td><td>$30.500</td><td>$52.500</td><td>$30.500</td><td>$41.500</td><td class='chg up'>&#9650; +0.40%</td></tr><tr><td>5/21/2026</td><td>$52.500</td><td>$30.500</td><td>$52.500</td><td>$30.500</td><td>$41.333</td><td class='chg up'>&#9650; +0.40%</td></tr><tr><td>5/20/2026</td><td>$53.000</td><td>$29.800</td><td>$53.000</td><td>$30.000</td><td>$41.167</td><td class='chg up'>&#9650; +0.16%</td></tr><tr><td>5/19/2026</td><td>$53.000</td><td>$29.800</td><td>$53.000</td><td>$29.800</td><td>$41.100</td><td class='chg down'>&#9660; -0.41%</td></tr><tr><td>5/15/2026</td><td>$52.500</td><td>$30.000</td><td>$52.500</td><td>$30.000</td><td>$41.167</td><td class='chg up'>&#9650; +1.15%</td></tr><tr><td>5/14/2026</td><td>$52.500</td><td>$29.600</td><td>$52.500</td><td>$30.000</td><td>$40.700</td><td class='chg up'>&#9650; +0.83%</td></tr><tr><td>5/13/2026</td><td>$52.000</td><td>$29.500</td><td>$52.000</td><td>$29.500</td><td>$40.367</td><td class='chg up'>&#9650; +0.25%</td></tr><tr><td>5/12/2026</td><td>$52.000</td><td>$29.500</td><td>$52.000</td><td>$29.500</td><td>$40.267</td><td class='chg up'>&#9650; +0.17%</td></tr><tr><td>5/11/2026</td><td>$52.000</td><td>$29.200</td><td>$52.000</td><td>$29.500</td><td>$40.200</td><td class='chg up'>&#9650; +0.92%</td></tr><tr><td>5/8/2026</td><td>$52.000</td><td>$28.000</td><td>$52.000</td><td>$29.000</td><td>$39.833</td><td class='chg up'>&#9650; +2.14%</td></tr><tr><td>5/7/2026</td><td>$51.000</td><td>$28.000</td><td>$51.000</td><td>$28.000</td><td>$39.000</td><td class='chg up'>&#9650; +0.43%</td></tr><tr><td>5/6/2026</td><td>$51.000</td><td>$28.000</td><td>$51.000</td><td>$28.000</td><td>$38.833</td><td class='chg flat'>0.00%</td></tr><tr><td>5/5/2026</td><td>$51.000</td><td>$28.000</td><td>$51.000</td><td>$28.000</td><td>$38.833</td><td class='chg flat'>0.00%</td></tr><tr><td>5/4/2026</td><td>$51.000</td><td>$28.000</td><td>$51.000</td><td>$28.000</td><td>$38.833</td><td class='chg down'>&#9660; -0.43%</td></tr><tr><td>5/1/2026</td><td>$51.000</td><td>$28.500</td><td>$51.000</td><td>$28.500</td><td>$39.000</td><td class='chg up'>&#9650; +0.34%</td></tr></tbody></table></div>
-</div>
-<div class="section">
-  <div class="section-header">
-    <span class="chip chip-nand">NAND</span>
-    <h2>512Gb TLC</h2>
-    <span class="sub">NAND Flash Wafer</span>
-  </div>
-  <div class="table-wrap"><table><thead><tr><th>Date</th><th>Weekly High</th><th>Weekly Low</th><th>Session High</th><th>Session Low</th><th>Session Average</th><th>Average Change</th></tr></thead><tbody><tr><td>5/11/2026</td><td>$21.500</td><td>$16.000</td><td>$21.500</td><td>$16.000</td><td>$20.541</td><td class='chg up'>&#9650; +0.34%</td></tr><tr><td>5/4/2026</td><td>$21.500</td><td>$16.000</td><td>$21.500</td><td>$16.000</td><td>$20.472</td><td class='chg down'>&#9660; -0.57%</td></tr></tbody></table></div>
-</div>
-<footer><p>Prices in USD · Source: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a></p></footer>
+<div id="history-sections"></div>
+
+<footer>
+  <p>Prices in USD · Source: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a></p>
+</footer>
+
+<script>
+function parseDate(str) {
+  const [m, d, y] = str.split('/').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function chgClass(v) {
+  if (!v || v === '0.00%') return 'flat';
+  return v.startsWith('-') ? 'down' : 'up';
+}
+
+function chgHTML(v) {
+  const cls = chgClass(v);
+  if (cls === 'flat') return '<span class="chg flat">0.00%</span>';
+  const arrow = cls === 'up' ? '&#9650;' : '&#9660;';
+  return `<span class="chg ${cls}">${arrow} ${v}</span>`;
+}
+
+function statValueHTML(v, field) {
+  if (field !== 'session_change') return v;
+  const cls = chgClass(v);
+  if (cls === 'flat') return `<div class="stat-value flat">0.00%</div>`;
+  const arrow = cls === 'up' ? '&#9650;' : '&#9660;';
+  return `<div class="stat-value ${cls}">${arrow} ${v}</div>`;
+}
+
+function renderCard(entry, type, name, sub) {
+  const cls     = type === 'DRAM' ? 'dram' : 'nand';
+  const chipCls = type === 'DRAM' ? 'chip-dram' : 'chip-nand';
+  return `
+  <div class="latest-card ${cls}">
+    <div class="card-top">
+      <div class="card-title-group">
+        <span class="chip ${chipCls}">${type}</span>
+        <div>
+          <div class="card-name">${name}</div>
+          <div class="card-sub">${sub}</div>
+        </div>
+      </div>
+      <span class="card-date">${entry.date}</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">Weekly High</div><div class="stat-value">${entry.weekly_high}</div></div>
+      <div class="stat"><div class="stat-label">Weekly Low</div><div class="stat-value">${entry.weekly_low}</div></div>
+      <div class="stat"><div class="stat-label">Session High</div><div class="stat-value">${entry.session_high}</div></div>
+      <div class="stat"><div class="stat-label">Session Low</div><div class="stat-value">${entry.session_low}</div></div>
+      <div class="stat"><div class="stat-label">Session Average</div><div class="stat-value">${entry.session_avg}</div></div>
+      <div class="stat"><div class="stat-label">Average Change</div>${statValueHTML(entry.session_change, 'session_change')}</div>
+    </div>
+  </div>`;
+}
+
+function renderSection(rows, type, chipCls, name, sub) {
+  const tbody = rows.map(r => `
+    <tr>
+      <td>${r.date}</td>
+      <td>${r.weekly_high}</td>
+      <td>${r.weekly_low}</td>
+      <td>${r.session_high}</td>
+      <td>${r.session_low}</td>
+      <td>${r.session_avg}</td>
+      <td>${chgHTML(r.session_change)}</td>
+    </tr>`).join('');
+
+  return `
+  <div class="section">
+    <div class="section-header">
+      <span class="chip ${chipCls}">${type}</span>
+      <h2>${name}</h2>
+      <span class="sub">${sub}</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Weekly High</th>
+            <th>Weekly Low</th>
+            <th>Session High</th>
+            <th>Session Low</th>
+            <th>Session Average</th>
+            <th>Average Change</th>
+          </tr>
+        </thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+async function init() {
+  const res  = await fetch('history.json');
+  const data = await res.json();
+
+  const ddr5 = [...data.ddr5].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+  const tlc  = [...data.tlc ].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+
+  const allLatest = [ddr5[0], tlc[0]].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+  document.getElementById('badge-date').textContent = 'Last updated: ' + allLatest[0].date;
+
+  document.getElementById('latest-grid').innerHTML =
+    renderCard(ddr5[0], 'DRAM', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz') +
+    renderCard(tlc[0],  'NAND', '512Gb TLC',         'NAND Flash Wafer');
+
+  document.getElementById('history-sections').innerHTML =
+    renderSection(ddr5, 'DRAM', 'chip-dram', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz') +
+    renderSection(tlc,  'NAND', 'chip-nand', '512Gb TLC',         'NAND Flash Wafer');
+}
+
+init();
+</script>
 </body>
 </html>
