@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Update DRAM Prices</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; padding: 2rem 1.5rem 4rem; }
+    h1 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; text-align: center; margin-bottom: .3rem; }
+    .page-sub { font-size: .8rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 2rem; }
+    .page-sub a { color: #60a5fa; text-decoration: none; }
+    .panel { max-width: 700px; margin: 0 auto 1.25rem; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; }
+    .panel.dram-panel { border-color: #1e40af; }
+    .panel.nand-panel { border-color: #166534; }
+    .panel-title { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: #94a3b8; margin-bottom: 1.2rem; display: flex; align-items: center; gap: .6rem; }
+    .chip { padding: .22rem .65rem; border-radius: 6px; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .chip-dram { background: #1d4ed8; color: #bfdbfe; }
+    .chip-nand { background: #065f46; color: #a7f3d0; }
+    .chip-sys  { background: #334155; color: #94a3b8; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem; }
+    .field { display: flex; flex-direction: column; gap: .35rem; }
+    .field label { font-size: .65rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; }
+    input[type=text], input[type=password] {
+      background: #0f172a; border: 1px solid #334155; border-radius: 6px;
+      padding: .5rem .75rem; color: #e2e8f0; font-size: .9rem; outline: none; width: 100%;
+      font-variant-numeric: tabular-nums; transition: border-color .15s;
+    }
+    input[type=text]:focus, input[type=password]:focus { border-color: #3b82f6; }
+    .token-row { display: grid; grid-template-columns: 1fr auto; gap: .75rem; align-items: end; }
+    .token-row .field { flex: 1; }
+    .toggle-label { display: flex; align-items: center; gap: .6rem; font-size: .85rem; color: #94a3b8; cursor: pointer; margin-bottom: 1rem; user-select: none; }
+    .toggle-label input[type=checkbox] { width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; }
+    #tlc-fields { transition: opacity .2s; }
+    #tlc-fields.disabled { opacity: .3; pointer-events: none; }
+    .btn { padding: .55rem 1.2rem; background: #1d4ed8; border: none; border-radius: 7px; color: #fff; font-size: .875rem; font-weight: 700; cursor: pointer; transition: background .15s; white-space: nowrap; }
+    .btn:hover { background: #2563eb; }
+    .btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+    .btn-submit { display: block; width: 100%; max-width: 700px; margin: 0 auto; padding: .9rem; font-size: 1rem; border-radius: 9px; }
+    #status { max-width: 700px; margin: 1rem auto 0; padding: .85rem 1rem; border-radius: 8px; font-size: .875rem; line-height: 1.5; display: none; }
+    #status.ok   { background: #052e16; border: 1px solid #166534; color: #4ade80; }
+    #status.err  { background: #1f0707; border: 1px solid #7f1d1d; color: #f87171; }
+    #status.info { background: #0c1a2e; border: 1px solid #1d4ed8; color: #7dd3fc; }
+    .hint { font-size: .72rem; color: #475569; margin-top: .5rem; line-height: 1.5; }
+    footer { text-align: center; font-size: .72rem; color: #475569; margin-top: 2rem; }
+    footer a { color: #60a5fa; text-decoration: none; }
+    @media (max-width: 540px) {
+      .fields { grid-template-columns: 1fr 1fr; }
+      .token-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Update DRAM Prices</h1>
+<div class="page-sub">
+  Enter values copied from <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange</a>
+  &nbsp;&middot;&nbsp; <a href="./">&#8592; Back to dashboard</a>
+</div>
+
+<!-- GitHub Token -->
+<div class="panel">
+  <div class="panel-title"><span class="chip chip-sys">Config</span> GitHub Token</div>
+  <div class="token-row">
+    <div class="field">
+      <label>Personal Access Token (repo scope)</label>
+      <input type="password" id="gh-token" placeholder="ghp_…" spellcheck="false" autocomplete="off"/>
+    </div>
+    <button class="btn" onclick="saveToken()">Save Token</button>
+  </div>
+  <p class="hint">Stored only in this browser's localStorage — never sent anywhere except directly to the GitHub API.</p>
+</div>
+
+<!-- Date -->
+<div class="panel">
+  <div class="panel-title"><span class="chip chip-sys">Date</span></div>
+  <div class="fields" style="grid-template-columns:1fr 1fr">
+    <div class="field">
+      <label>Entry Date (M/D/YYYY)</label>
+      <input type="text" id="entry-date" placeholder="5/29/2026"/>
+    </div>
+  </div>
+  <p class="hint">Pre-filled with today. Change only if entering a past session.</p>
+</div>
+
+<!-- DDR5 -->
+<div class="panel dram-panel">
+  <div class="panel-title"><span class="chip chip-dram">DRAM</span> DDR5 16Gb (2Gx8) &mdash; 4800 / 5600 MHz</div>
+  <div class="fields">
+    <div class="field">
+      <label>Weekly High ($)</label>
+      <input type="text" id="d5-wh" placeholder="52.600"/>
+    </div>
+    <div class="field">
+      <label>Weekly Low ($)</label>
+      <input type="text" id="d5-wl" placeholder="30.000"/>
+    </div>
+    <div class="field">
+      <label>Session High ($)</label>
+      <input type="text" id="d5-sh" placeholder="52.600"/>
+    </div>
+    <div class="field">
+      <label>Session Low ($)</label>
+      <input type="text" id="d5-sl" placeholder="30.000"/>
+    </div>
+    <div class="field">
+      <label>Session Average ($)</label>
+      <input type="text" id="d5-sa" placeholder="41.900"/>
+    </div>
+    <div class="field">
+      <label>Average Change (%)</label>
+      <input type="text" id="d5-sc" placeholder="+0.16"/>
+    </div>
+  </div>
+  <p class="hint">Enter numbers only — dollar signs are added automatically. Example: <strong>52.600</strong></p>
+</div>
+
+<!-- 512Gb TLC -->
+<div class="panel nand-panel">
+  <div class="panel-title"><span class="chip chip-nand">NAND</span> 512Gb TLC &mdash; NAND Flash Wafer (weekly)</div>
+  <label class="toggle-label">
+    <input type="checkbox" id="tlc-enabled" onchange="toggleTlc()"/>
+    Include 512Gb TLC update this session
+  </label>
+  <div id="tlc-fields" class="disabled">
+    <div class="fields">
+      <div class="field">
+        <label>Weekly High ($)</label>
+        <input type="text" id="tlc-wh" placeholder="22.000"/>
+      </div>
+      <div class="field">
+        <label>Weekly Low ($)</label>
+        <input type="text" id="tlc-wl" placeholder="16.000"/>
+      </div>
+      <div class="field">
+        <label>Session High ($)</label>
+        <input type="text" id="tlc-sh" placeholder="22.000"/>
+      </div>
+      <div class="field">
+        <label>Session Low ($)</label>
+        <input type="text" id="tlc-sl" placeholder="16.000"/>
+      </div>
+      <div class="field">
+        <label>Session Average ($)</label>
+        <input type="text" id="tlc-sa" placeholder="20.707"/>
+      </div>
+      <div class="field">
+        <label>Average Change (%)</label>
+        <input type="text" id="tlc-sc" placeholder="+0.81"/>
+      </div>
+    </div>
+    <p class="hint" style="margin-top:.6rem">Only check this on weeks when DRAMeXchange shows a new 512Gb TLC price.</p>
+  </div>
+</div>
+
+<button class="btn btn-submit" id="submit-btn" onclick="submitUpdate()">&#8593; Push to GitHub</button>
+<div id="status"></div>
+
+<footer>
+  <p>Prices in USD &middot; Source: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a></p>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var OWNER     = 'nlee756525';
+  var REPO      = 'dram-prices';
+  var TOKEN_KEY = '__dram_gh_token';
+  var API_BASE  = 'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/';
+
+  /* ── helpers ── */
+
+  function todayStr() {
+    var d = new Date();
+    return (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
+  }
+
+  function fmtPrice(v) {
+    var s = String(v || '').replace(/\s/g, '');
+    var n = parseFloat(s.replace(/[^0-9.-]/g, ''));
+    if (isNaN(n) || s === '') return s;
+    return '$' + n.toFixed(3);
+  }
+
+  function fmtChange(v) {
+    var s = String(v || '').trim().replace(/\s/g, '');
+    if (!s) return '0.00%';
+    var neg = s.indexOf('-') > -1;
+    var n = parseFloat(s.replace(/[^0-9.]/g, ''));
+    if (isNaN(n)) return s;
+    if (n === 0) return '0.00%';
+    return (neg ? '-' : '+') + n.toFixed(2) + '%';
+  }
+
+  function getToken() {
+    return (document.getElementById('gh-token').value.trim() ||
+            localStorage.getItem(TOKEN_KEY) || '');
+  }
+
+  function showStatus(type, msg) {
+    var el = document.getElementById('status');
+    el.className = type;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hdrs(token) {
+    return {
+      'Authorization' : 'token ' + token,
+      'Accept'        : 'application/vnd.github.v3+json',
+      'Content-Type'  : 'application/json'
+    };
+  }
+
+  function ghGet(path, token) {
+    return fetch(API_BASE + path, { headers: hdrs(token) })
+      .then(function (r) {
+        if (!r.ok) throw new Error('GET ' + path + ': ' + r.status);
+        return r.json();
+      });
+  }
+
+  function ghPut(path, content, message, sha, token) {
+    var body = {
+      message : message,
+      content : btoa(unescape(encodeURIComponent(content)))
+    };
+    if (sha) body.sha = sha;
+    return fetch(API_BASE + path, {
+      method  : 'PUT',
+      headers : hdrs(token),
+      body    : JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { throw new Error(path + ': ' + r.status + ' — ' + t); });
+    });
+  }
+
+  /* ── UI actions ── */
+
+  window.saveToken = function () {
+    var t = document.getElementById('gh-token').value.trim();
+    if (!t) { showStatus('err', 'Enter a token first.'); return; }
+    localStorage.setItem(TOKEN_KEY, t);
+    showStatus('ok', 'Token saved in localStorage.');
+  };
+
+  window.toggleTlc = function () {
+    var enabled = document.getElementById('tlc-enabled').checked;
+    document.getElementById('tlc-fields').className = enabled ? '' : 'disabled';
+  };
+
+  window.submitUpdate = function () {
+    var token = getToken();
+    if (!token) { showStatus('err', 'No GitHub token — enter and save one first.'); return; }
+
+    var dateVal = document.getElementById('entry-date').value.trim();
+    if (!dateVal) { showStatus('err', 'Date is required.'); return; }
+
+    /* DDR5 */
+    var d5wh = document.getElementById('d5-wh').value.trim();
+    if (!d5wh) { showStatus('err', 'DDR5 values are required.'); return; }
+
+    var ddr5 = {
+      date           : dateVal,
+      weekly_high    : fmtPrice(document.getElementById('d5-wh').value),
+      weekly_low     : fmtPrice(document.getElementById('d5-wl').value),
+      session_high   : fmtPrice(document.getElementById('d5-sh').value),
+      session_low    : fmtPrice(document.getElementById('d5-sl').value),
+      session_avg    : fmtPrice(document.getElementById('d5-sa').value),
+      session_change : fmtChange(document.getElementById('d5-sc').value)
+    };
+
+    /* TLC (optional) */
+    var tlc = null;
+    if (document.getElementById('tlc-enabled').checked) {
+      var tlcwh = document.getElementById('tlc-wh').value.trim();
+      if (!tlcwh) { showStatus('err', '512Gb TLC values are required when the checkbox is checked.'); return; }
+      tlc = {
+        date           : dateVal,
+        weekly_high    : fmtPrice(document.getElementById('tlc-wh').value),
+        weekly_low     : fmtPrice(document.getElementById('tlc-wl').value),
+        session_high   : fmtPrice(document.getElementById('tlc-sh').value),
+        session_low    : fmtPrice(document.getElementById('tlc-sl').value),
+        session_avg    : fmtPrice(document.getElementById('tlc-sa').value),
+        session_change : fmtChange(document.getElementById('tlc-sc').value)
+      };
+    }
+
+    var btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    showStatus('info', 'Fetching current history.json from GitHub…');
+
+    ghGet('history.json', token)
+      .then(function (hFile) {
+        var h = JSON.parse(atob(hFile.content.replace(/\n/g, '')));
+        var added = [];
+
+        /* duplicate check */
+        if (h.ddr5.some(function (r) { return r.date === dateVal; })) {
+          throw new Error('DDR5 entry for ' + dateVal + ' already exists. Delete it first if you need to re-enter.');
+        }
+        h.ddr5.push(ddr5);
+        added.push('DDR5');
+
+        if (tlc) {
+          if (h.tlc.some(function (r) { return r.date === dateVal; })) {
+            throw new Error('512Gb TLC entry for ' + dateVal + ' already exists.');
+          }
+          h.tlc.push(tlc);
+          added.push('512Gb TLC');
+        }
+
+        showStatus('info', 'Pushing ' + added.join(' + ') + ' for ' + dateVal + '…');
+        return ghPut('history.json', JSON.stringify(h, null, 2),
+                     'prices: add ' + dateVal, hFile.sha, token);
+      })
+      .then(function () {
+        showStatus('ok',
+          '✅ Done! Dashboard updated with data for ' + document.getElementById('entry-date').value.trim() +
+          '.\nThe live site refreshes within ~30 seconds.');
+        /* clear DDR5 fields so next entry is fresh */
+        ['d5-wh','d5-wl','d5-sh','d5-sl','d5-sa','d5-sc'].forEach(function (id) {
+          document.getElementById(id).value = '';
+        });
+        if (document.getElementById('tlc-enabled').checked) {
+          ['tlc-wh','tlc-wl','tlc-sh','tlc-sl','tlc-sa','tlc-sc'].forEach(function (id) {
+            document.getElementById(id).value = '';
+          });
+          document.getElementById('tlc-enabled').checked = false;
+          window.toggleTlc();
+        }
+        /* advance date by 1 day for convenience */
+        var parts = document.getElementById('entry-date').value.trim().split('/');
+        if (parts.length === 3) {
+          var next = new Date(+parts[2], +parts[0] - 1, +parts[1] + 1);
+          document.getElementById('entry-date').value =
+            (next.getMonth() + 1) + '/' + next.getDate() + '/' + next.getFullYear();
+        }
+      })
+      .catch(function (e) {
+        showStatus('err', '❌ ' + e.message);
+      })
+      .then(function () {
+        btn.disabled = false;
+      });
+  };
+
+  /* ── init ── */
+  document.addEventListener('DOMContentLoaded', function () {
+    var saved = localStorage.getItem(TOKEN_KEY);
+    if (saved) document.getElementById('gh-token').value = saved;
+    document.getElementById('entry-date').value = todayStr();
+  });
+})();
+</script>
+</body>
+</html>
