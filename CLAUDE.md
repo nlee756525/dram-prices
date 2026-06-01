@@ -1,208 +1,175 @@
-# DRAM Price Dashboard — Project Instructions
+# DRAM Price Dashboard — Project Reference
 
-This document is the complete reference for reproducing, maintaining, and extending
-this project. Follow every step in order when setting up from scratch.
+**Live dashboard:** https://nlee756525.github.io/dram-prices/
+**Repo:** https://github.com/nlee756525/dram-prices
+**Manual update form:** https://nlee756525.github.io/dram-prices/update.html
 
 ---
 
 ## What This Project Does
 
-Scrapes two spot price rows from https://www.dramexchange.com/ every day at 08:45 AM:
+Tracks two spot price rows from https://www.dramexchange.com/ and displays them
+on a GitHub Pages dashboard:
 
-- **DDR5 16Gb (2Gx8) 4800/5600** — from the "DRAM Spot Price" table
-- **512Gb TLC** — from the "Wafer Spot Price" table
+- **DDR5 16Gb (2Gx8) 4800/5600** — from the "DRAM Spot Price" table (updates daily, weekdays)
+- **512Gb TLC** — from the "Wafer Spot Price" table (updates weekly, typically Mondays)
 
-Fields captured per row: Daily/Weekly High, Daily/Weekly Low, Session High,
-Session Low, Session Average, Session Change (%).
-
-Data is appended to `history.json`, rendered into `index.html`, and pushed
-automatically to GitHub Pages so the live URL updates within ~30 seconds.
-
-**Live URL:** https://nlee756525.github.io/dram-prices/
-**GitHub repo:** https://github.com/nlee756525/dram-prices
+Fields captured per row: Weekly High, Weekly Low, Session High, Session Low,
+Session Average, Average Change (%).
 
 ---
 
-## File Structure
+## Architecture
 
 ```
-dram_scraper/
-├── scrape.py          Main script — scrapes, builds HTML, pushes to GitHub
-├── setup.bat          Run once on Windows to install deps + schedule daily task
-├── start_server.bat   Optional local server at http://localhost:8080/index.html
-├── config.env         GitHub credentials — NEVER commit this file
-├── .gitignore         Excludes config.env, scraper.log, __pycache__
-├── history.json       Accumulates all scraped rows by date
-├── index.html         Generated dashboard served by GitHub Pages
-└── scraper.log        Appended on every run; check here if scrape fails
+history.json        ← single source of truth; all price data lives here
+index.html          ← dynamic dashboard; fetches history.json via JS at load time
+update.html         ← manual data-entry form; pushes to history.json via GitHub API
+scrape.py           ← Playwright scraper; runs via GitHub Actions; only updates history.json
+.github/workflows/
+  scrape.yml        ← runs scrape.py at 6:30 AM ET every weekday
 ```
+
+### How index.html works
+`index.html` is a static file served by GitHub Pages. It fetches `history.json`
+at runtime using JavaScript. The latest entry for each product appears as large
+cards at the top; the full price history is in tables below (newest first).
+**You never need to regenerate or edit index.html** — updating history.json is enough.
+
+### Why index.html is dynamic (not generated)
+Previously scrape.py regenerated index.html on every run. This was changed so
+that only history.json needs to be updated, making both manual and automated
+updates simpler.
 
 ---
 
-## One-Time Setup (Windows)
+## Automated Updates (GitHub Actions)
 
-### Prerequisites
-- Python 3.8+ installed and on PATH
-- Git installed (https://git-scm.com/download/win)
-- A GitHub account
+**File:** `.github/workflows/scrape.yml`
+**Schedule:** 6:30 AM ET (10:30 UTC), Monday–Friday
+**Manual trigger:** GitHub → Actions tab → "Scrape DRAM Prices" → Run workflow
 
-### Step 1 — Copy files to Windows
-Place the entire `dram_scraper/` folder anywhere on the PC, e.g.:
-```
-C:\Users\<you>\dram_scraper\
-```
+The workflow:
+1. Spins up a GitHub-hosted Ubuntu VM (your computer does NOT need to be on)
+2. Installs Python + Playwright + Chromium
+3. Runs `scrape.py`
+4. Saves a debug screenshot (`scrape-debug.png`) as an Actions artifact (14-day retention)
 
-### Step 2 — Create config.env
-Create `dram_scraper\config.env` with the following content (fill in real values):
-```
-GITHUB_TOKEN=<personal access token with repo scope>
-GITHUB_USER=<github username>
-GITHUB_REPO=dram-prices
-```
-This file must NOT be committed to GitHub. It is already listed in `.gitignore`.
+### Why 6:30 AM ET
+DRAMeXchange posts its daily DRAM update at approximately 18:10 GMT+8 = 6:10 AM ET.
+The workflow fires 20 minutes later, before the user's normal morning routine.
+Running earlier than 6:10 AM ET would capture stale (previous day's) data.
 
-To create a GitHub Personal Access Token:
-1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Generate new token (classic)
-3. Check the `repo` scope only
-4. Copy the token into `config.env`
+### Why Playwright (real browser)
+DRAMeXchange returns HTTP 403 to all plain HTTP clients (curl, requests, WebFetch).
+Playwright launches a full headless Chromium browser, which the site allows.
 
-### Step 3 — Create the GitHub repository
-Run this once in PowerShell or Command Prompt (replace values):
-```
-curl -s -X POST ^
-  -H "Authorization: token <GITHUB_TOKEN>" ^
-  -H "Accept: application/vnd.github.v3+json" ^
-  https://api.github.com/user/repos ^
-  -d "{\"name\":\"dram-prices\",\"private\":false,\"auto_init\":false}"
-```
-
-### Step 4 — Enable GitHub Pages on the repo
-Run this once:
-```
-curl -s -X POST ^
-  -H "Authorization: token <GITHUB_TOKEN>" ^
-  -H "Accept: application/vnd.github.v3+json" ^
-  https://api.github.com/repos/<GITHUB_USER>/dram-prices/pages ^
-  -d "{\"source\":{\"branch\":\"main\",\"path\":\"/\"}}"
-```
-
-### Step 5 — Run setup.bat
-Double-click `setup.bat` (or right-click → Run as administrator if scheduler fails).
-
-What it does:
-1. Installs Playwright: `pip install playwright`
-2. Downloads Chromium: `python -m playwright install chromium`
-3. Configures git remote using credentials from `config.env`
-4. Registers a Windows Task Scheduler job named "DRAMeXchange Scraper" to run
-   `scrape.py` daily at 08:45 AM
-5. Runs `scrape.py` immediately for the first time
+### How scrape.py decides what to record
+- **DDR5:** Added for today's date if no entry already exists for today.
+- **TLC:** Added only when ≥6 days have passed since the last TLC entry (weekly cadence).
+- If DDR5 already exists for today, the script exits early with success (no duplicate).
 
 ---
 
-## How scrape.py Works
+## Manual Data Entry
 
-1. Launches headless Chromium via Playwright
-2. Navigates to https://www.dramexchange.com/
-3. Waits for `text=DRAM Spot Price` to appear (confirms tables are loaded)
-4. Waits an additional 2 seconds for dynamic data to finish rendering
-5. Finds the row containing "4800/5600" → extracts 6 cell values
-6. Finds the row containing "512Gb TLC" → extracts 6 cell values
-7. Loads `history.json`; appends today's entry if the date is not already present
-8. Saves updated `history.json`
-9. Renders `index.html` from the full history (newest row first)
-10. Calls the GitHub Contents API to PUT `index.html` and `history.json`
-    into the `nlee756525/dram-prices` repo on branch `main`
-11. GitHub Pages publishes the update within ~30 seconds
+Use **https://nlee756525.github.io/dram-prices/update.html** when you need to
+add data yourself (e.g., if the automated run failed or you are correcting values).
 
-### Why Playwright instead of requests/curl
-DRAMeXchange returns HTTP 403 to all server-side HTTP clients. Playwright
-launches a real Chromium browser which the site cannot distinguish from a
-normal user visit.
+1. Enter your GitHub token once — it is saved in the browser's localStorage
+2. The date pre-fills to today
+3. Fill in the 6 DDR5 values from DRAMeXchange
+4. Tick the TLC checkbox only on weeks when TLC shows a new price
+5. Click "Push to GitHub" — history.json updates and the dashboard reflects it within ~30 seconds
 
-### GitHub push (no git required)
-`scrape.py` uses Python's built-in `urllib` to call the GitHub Contents API
-directly. It does not run any `git` commands at scrape time. The `setup.bat`
-configures git only once (for the initial push of the repo files).
+**GitHub token:** stored in browser localStorage under key `__dram_gh_token`
+Token needs `repo` scope on the `nlee756525/dram-prices` repository.
 
 ---
 
-## Daily Workflow (Automatic)
+## history.json Format
 
-```
-08:45 AM  Task Scheduler fires
-          → python scrape.py
-          → Chromium loads dramexchange.com
-          → Rows extracted, history.json updated
-          → index.html regenerated
-          → GitHub API updates both files
-          → https://nlee756525.github.io/dram-prices/ reflects new data
+```json
+{
+  "ddr5": [
+    {
+      "date": "6/1/2026",
+      "weekly_high": "$53.000",
+      "weekly_low": "$30.500",
+      "session_high": "$53.000",
+      "session_low": "$30.500",
+      "session_avg": "$42.267",
+      "session_change": "+0.88%"
+    }
+  ],
+  "tlc": [
+    {
+      "date": "5/25/2026",
+      "weekly_high": "$22.000",
+      "weekly_low": "$16.000",
+      "session_high": "$22.000",
+      "session_low": "$16.000",
+      "session_avg": "$20.638",
+      "session_change": "-0.33%"
+    }
+  ]
+}
 ```
 
-No manual action needed once setup is complete.
+- Date format: `M/D/YYYY` (no leading zeros) — must be consistent
+- Prices: `$XX.XXX` (3 decimal places)
+- Change: `+X.XX%`, `-X.XX%`, or `0.00%`
+- Entries are in **chronological order** (oldest first); index.html reverses them for display
 
 ---
 
-## Viewing the Dashboard
+## Key Files
 
-Open in any browser:
-```
-https://nlee756525.github.io/dram-prices/
-```
-
-Or locally (without internet):
-```
-Double-click index.html
-```
-
-Or via local server:
-```
-Double-click start_server.bat  →  http://localhost:8080/index.html
-```
+| File | Purpose |
+|---|---|
+| `history.json` | All price data — the only file that needs updating |
+| `index.html` | Dashboard — do not edit; loads data from history.json dynamically |
+| `update.html` | Browser-based manual entry form |
+| `scrape.py` | Playwright scraper — reads GITHUB_TOKEN env var, updates history.json via API |
+| `.github/workflows/scrape.yml` | GitHub Actions workflow — schedule + steps |
+| `bookmarklet.html` | Old approach (bookmarklet run on DRAMeXchange in browser) — superseded |
+| `config.json.example` | Example config for running scrape.py locally with a config file |
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Check |
+| Problem | What to check |
 |---|---|
-| Page not updating | `scraper.log` — look for errors on the last run |
-| GitHub push fails | Token may have expired — generate a new one, update `config.env` |
-| Scrape returns N/A | DRAMeXchange may have changed their table layout — inspect the page and update the `filter(has_text=...)` selectors in `scrape.py` |
-| Task Scheduler not firing | Open Task Scheduler, find "DRAMeXchange Scraper", check Last Run Result |
-| Chromium download fails | Run `python -m playwright install chromium` manually in the `dram_scraper` folder |
+| Dashboard date not advancing | GitHub Actions tab — check if the 6:30 AM run ✅ or ❌ |
+| Workflow shows ✅ but no new data | The scraper found today's date already in history.json (duplicate) — was data added manually before 6:30 AM? |
+| Workflow shows ❌ | Download the `scrape-debug-XXXXX` artifact from the failed run — the screenshot shows exactly what Playwright saw (blocked page vs real data) |
+| DRAMeXchange blocked Playwright | The screenshot will show a Cloudflare/403 page — come back to Claude and request stealth mode (`playwright-extra` + stealth plugin) |
+| Wrong values scraped | Check the screenshot; DRAMeXchange may have changed their table layout — update the `filter(has_text=...)` selectors in scrape.py |
+| TLC not updating | Expected — TLC only records when ≥6 days have passed since the last entry |
+| Need to correct a bad entry | Use update.html won't help for edits — ask Claude to directly patch history.json via the GitHub API |
 
 ---
 
-## Changing the Schedule
+## History of Changes (as of June 2026)
 
-Open `setup.bat`, change:
-```
-set RUN_TIME=08:45
-```
-to any HH:MM time, then re-run `setup.bat`.
-
-Or edit the task directly in Windows Task Scheduler.
-
----
-
-## Re-creating from Scratch
-
-If the repo or files are lost, repeat Steps 1–5 above.
-The historical data lives in `history.json` — back this file up to preserve
-the full price history. If it is lost, the next scrape will start a fresh history.
+- **May 2026:** Project created; scrape.py + GitHub Actions workflow set up
+- **June 1, 2026 session with Claude:**
+  - `index.html` redesigned to be dynamic (fetches history.json via JS) — no more HTML regeneration
+  - `update.html` created as a manual entry form (browser-based, uses GitHub API)
+  - `scrape.py` updated to only push `history.json` (removed HTML regeneration)
+  - Workflow schedule changed from **8:45 AM ET → 6:30 AM ET** so it runs before the user's morning routine
+  - Debug screenshot artifact added to workflow for diagnosing failures
+  - Root cause identified: workflow was always a no-op because user was adding data before 8:45 AM; fix was the schedule change
 
 ---
 
-## Key Values
+## Key Context for Claude Sessions
 
-| Item | Value |
-|---|---|
-| GitHub user | nlee756525 |
-| GitHub repo | dram-prices |
-| GitHub Pages URL | https://nlee756525.github.io/dram-prices/ |
-| Scrape time | 08:45 AM daily |
-| Target product 1 | DDR5 16Gb (2Gx8) 4800/5600 (DRAM Spot Price table) |
-| Target product 2 | 512Gb TLC (Wafer Spot Price table) |
-| Token scope needed | repo |
-| Credentials file | config.env (local only, never committed) |
+- DRAMeXchange **always returns 403** to plain HTTP requests (curl, WebFetch, requests). Never try to fetch it directly — only Playwright works.
+- The dashboard URL is the GitHub Pages URL. The raw repo is at github.com/nlee756525/dram-prices.
+- All historical data is in `history.json` — fetch it with `curl -s "https://raw.githubusercontent.com/nlee756525/dram-prices/main/history.json"` to see current state.
+- To push file changes, use the GitHub Contents API (PUT to `https://api.github.com/repos/nlee756525/dram-prices/contents/<file>`) with the file's current SHA.
+- The GitHub token in use is stored in the user's browser localStorage and should not be hardcoded in any public file.
+- DDR5 updates every **weekday**; TLC updates every **Monday** (weekly).
+- The user manually copies numbers from DRAMeXchange and either pastes them into this chat or uses update.html. The automation is meant to eliminate this entirely.
