@@ -117,7 +117,7 @@ async def scrape_dramexchange():
                 wait_until="load",
                 timeout=45000
             )
-            print(f"  HTTP status: {response.status()}")
+            print(f"  HTTP status: {response.status}")
             nav_ok = True
         except Exception as e:
             print(f"  Navigation error: {e}")
