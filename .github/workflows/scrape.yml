@@ -57,5 +57,5 @@ jobs:
           retention-days: 14
 
       - name: Fail if scraper failed
-        if: steps.scrape.outcome == 'failure'
+        if: steps.scrape.conclusion == 'failure'
         run: exit 1
