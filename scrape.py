@@ -10,6 +10,7 @@ import json
 import base64
 import urllib.request
 import os
+import traceback
 from datetime import date, datetime
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -110,6 +111,9 @@ async def scrape_dramexchange():
 
         # ── Navigate ──────────────────────────────────────────────────────────
         print("  Loading DRAMeXchange...")
+        import playwright
+        print(f"  Playwright version: {playwright.__version__}")
+
         nav_ok = False
         try:
             response = await page.goto(
@@ -117,9 +121,12 @@ async def scrape_dramexchange():
                 wait_until="load",
                 timeout=45000
             )
-            print(f"  HTTP status: {response.status}")
+            status = response.status if response is not None else "None"
+            print(f"  HTTP status: {status}")
             nav_ok = True
         except Exception as e:
+            traceback.print_exc()
+            print(f"  Navigation error type: {type(e).__name__}")
             print(f"  Navigation error: {e}")
         finally:
             await page.screenshot(path="scrape-debug.png", full_page=True)
