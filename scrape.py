@@ -17,9 +17,6 @@ Setup:
 
 Run manually:
     python scrape.py
-
-Schedule (Mac/Linux cron):
-    45 13 * * 1-5 /usr/bin/python3 /path/to/scrape.py >> /path/to/scrape.log 2>&1
 """
 
 import asyncio
@@ -56,14 +53,14 @@ def today_str():
     return f"{d.month}/{d.day}/{d.year}"
 
 def price(v):
-    v = (v or "").strip().replace(",", "").replace("$", "").replace(" ", "")
+    v = (v or "").strip().replace(",", "").replace("$", "").replace("\xa0", "").replace(" ", "")
     try:
         return f"${float(v):.3f}"
     except ValueError:
         return v
 
 def fmt_chg(v):
-    v = (v or "").strip().replace(" ", "").replace("%", "").replace(" ", "")
+    v = (v or "").strip().replace(" ", "").replace("%", "").replace("\xa0", "")
     try:
         n = float(v)
         if n > 0:  return f"+{n:.2f}%"
@@ -105,7 +102,12 @@ async def scrape_dramexchange():
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(
             headless=True,
-            args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-blink-features=AutomationControlled",
+            ]
         )
         ctx = await browser.new_context(
             user_agent=(
@@ -117,30 +119,63 @@ async def scrape_dramexchange():
             locale="en-US",
             extra_http_headers={
                 "Accept-Language": "en-US,en;q=0.9",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "Sec-Fetch-Dest": "document",
+                "Sec-Fetch-Mode": "navigate",
+                "Sec-Fetch-Site": "none",
+                "Upgrade-Insecure-Requests": "1",
             }
         )
-        page = await ctx.new_page()
 
-        print("  Loading DRAMeXchange...")
-        response = await page.goto(
-            "https://www.dramexchange.com/",
-            wait_until="networkidle",
-            timeout=60000
+        # Hide webdriver property
+        await ctx.add_init_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
         )
-        print(f"  HTTP status: {response.status()}")
 
-        # Save a screenshot so GitHub Actions artifacts let you see what was scraped
-        await page.screenshot(path="scrape-debug.png", full_page=False)
-        print("  Screenshot saved → scrape-debug.png")
+        page = await ctx.new_page()
+        response = None
+
+        try:
+            print("  Loading DRAMeXchange...")
+            # Use "load" instead of "networkidle" — DRAMeXchange has background
+            # polling scripts that prevent networkidle from ever firing, causing timeout
+            response = await page.goto(
+                "https://www.dramexchange.com/",
+                wait_until="load",
+                timeout=45000
+            )
+            print(f"  HTTP status: {response.status()}")
+        except Exception as nav_err:
+            print(f"  Navigation error: {nav_err}")
+        finally:
+            # Always save a screenshot so we can see what happened
+            try:
+                await page.screenshot(path="scrape-debug.png", full_page=False)
+                print("  Screenshot saved → scrape-debug.png")
+            except Exception:
+                pass
+
+        if response is None:
+            raise RuntimeError("Navigation failed — check scrape-debug.png in Actions artifacts")
 
         if response.status() == 403:
-            await browser.close()
-            raise RuntimeError("DRAMeXchange returned 403 — bot protection may have changed")
+            raise RuntimeError(
+                f"DRAMeXchange returned 403 — check scrape-debug.png"
+            )
 
-        # Wait for at least one table cell to appear
-        await page.wait_for_selector("tr td", timeout=30000)
-        # Extra pause for any deferred JS rendering
+        # Wait for the price table to render
+        try:
+            await page.wait_for_selector("tr td", timeout=20000)
+        except Exception:
+            raise RuntimeError(
+                "Price table not found within 20s — check scrape-debug.png"
+            )
+
+        # Brief pause for any deferred JS rendering
         await page.wait_for_timeout(1500)
+
+        # Re-take screenshot after data is loaded
+        await page.screenshot(path="scrape-debug.png", full_page=False)
 
         async def read_row(keyword):
             loc = page.locator("tr").filter(has_text=keyword).first
@@ -150,9 +185,10 @@ async def scrape_dramexchange():
             if len(cells) < 7:
                 return None
             texts = [
-                (await c.inner_text()).strip().replace(" ", " ").strip()
+                (await c.inner_text()).strip().replace("\xa0", " ").strip()
                 for c in cells
             ]
+            print(f"  Row '{keyword}': {texts[:7]}")
             return {
                 "date":           today_str(),
                 "weekly_high":    price(texts[1]),
@@ -191,8 +227,7 @@ async def main():
 
     if not ddr5:
         raise RuntimeError(
-            "DDR5 row (4800/5600) not found on DRAMeXchange — "
-            "check scrape-debug.png in Actions artifacts"
+            "DDR5 row (4800/5600) not found — check scrape-debug.png in Actions artifacts"
         )
     print(f"  DDR5 → {ddr5}")
 
