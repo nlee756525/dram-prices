@@ -29,8 +29,6 @@ jobs:
           python -m playwright install-deps chromium
 
       - name: Run scraper
-        id: scrape
-        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -55,7 +53,3 @@ jobs:
           path: scrape-debug.png
           if-no-files-found: ignore
           retention-days: 14
-
-      - name: Fail if scraper failed
-        if: steps.scrape.conclusion == 'failure'
-        run: exit 1
