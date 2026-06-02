@@ -3,7 +3,7 @@ name: Scrape DRAM Prices
 on:
   schedule:
     - cron: '30 10 * * 1-5'  # 6:30 AM ET (10:30 UTC), weekdays only
-  workflow_dispatch:           # manual trigger from the Actions tab
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -29,9 +29,23 @@ jobs:
           python -m playwright install-deps chromium
 
       - name: Run scraper
+        id: scrape
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python scrape.py
+        run: |
+          python scrape.py 2>&1 | tee scrape-last-run.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Commit log to repo
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase || true
+          git add -f scrape-last-run.log
+          git diff --staged --quiet || git commit -m "debug: scrape log $(date -u +'%Y-%m-%dT%H:%M')"
+          git push || true
 
       - name: Upload debug screenshot
         if: always()
@@ -41,3 +55,7 @@ jobs:
           path: scrape-debug.png
           if-no-files-found: ignore
           retention-days: 14
+
+      - name: Fail if scraper failed
+        if: steps.scrape.outcome == 'failure'
+        run: exit 1
