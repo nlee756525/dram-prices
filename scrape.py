@@ -111,8 +111,6 @@ async def scrape_dramexchange():
 
         # ── Navigate ──────────────────────────────────────────────────────────
         print("  Loading DRAMeXchange...")
-        import playwright
-        print(f"  Playwright version: {playwright.__version__}")
 
         nav_ok = False
         try:
