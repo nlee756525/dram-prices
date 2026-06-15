@@ -260,15 +260,6 @@
       "session_low": "$30.500",
       "session_avg": "$44.833",
       "session_change": "+0.37%"
-    },
-    {
-      "date": "6/15/2026",
-      "weekly_high": "Spot",
-      "weekly_low": "MemoryCard",
-      "session_high": "SSD",
-      "session_low": "Contract",
-      "session_avg": "MobileDRAM",
-      "session_change": "eMMC%"
     }
   ],
   "tlc": [
@@ -316,15 +307,6 @@
       "session_low": "$16.500",
       "session_avg": "$20.640",
       "session_change": "+0.01%"
-    },
-    {
-      "date": "6/15/2026",
-      "weekly_high": "Spot",
-      "weekly_low": "MemoryCard",
-      "session_high": "SSD",
-      "session_low": "Contract",
-      "session_avg": "MobileDRAM",
-      "session_change": "eMMC%"
     }
   ]
 }
