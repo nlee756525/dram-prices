@@ -158,16 +158,29 @@ async def scrape_dramexchange():
         await page.screenshot(path="scrape-debug.png", full_page=True)
 
         # ── Extract rows ──────────────────────────────────────────────────────
+        def looks_like_price(v):
+            v = v.strip().replace(",", "").replace("$", "").replace("\xa0", "").replace(" ", "")
+            try:
+                float(v)
+                return True
+            except ValueError:
+                return False
+
         async def read_row(*keywords):
-            """Try each keyword in order; return the first matching row."""
+            """Try each keyword; scan all matching rows and return first with real price data."""
             for kw in keywords:
-                loc = page.locator("tr").filter(has_text=kw).first
-                if await loc.count() > 0:
-                    cells = await loc.locator("td").all()
-                    if len(cells) >= 7:
-                        texts = [(await c.inner_text()).strip().replace("\xa0", " ").strip()
-                                 for c in cells]
-                        print(f"  Matched '{kw}': {texts[:7]}")
+                locs = page.locator("tr").filter(has_text=kw)
+                count = await locs.count()
+                for i in range(count):
+                    cells = await locs.nth(i).locator("td").all()
+                    if len(cells) < 7:
+                        print(f"  '{kw}' row[{i}] only {len(cells)} cells — skip")
+                        continue
+                    texts = [(await c.inner_text()).strip().replace("\xa0", " ").strip()
+                             for c in cells]
+                    valid = sum(1 for v in texts[1:6] if looks_like_price(v))
+                    if valid >= 3:
+                        print(f"  Matched '{kw}' row[{i}] ({valid}/5 price fields): {texts[:7]}")
                         return {
                             "date":           today_str(),
                             "weekly_high":    price(texts[1]),
@@ -177,8 +190,8 @@ async def scrape_dramexchange():
                             "session_avg":    price(texts[5]),
                             "session_change": fmt_chg(texts[6]),
                         }
-                    print(f"  '{kw}' row found but only {len(cells)} cells")
-            print(f"  None of {keywords} matched any row")
+                    print(f"  '{kw}' row[{i}] skipped (only {valid}/5 price-like): {texts[:7]}")
+            print(f"  None of {keywords} matched a row with valid price data")
             return None
 
         ddr5 = await read_row("4800/5600", "4800 / 5600", "DDR5 16Gb")
