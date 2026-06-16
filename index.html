@@ -17,7 +17,7 @@
     .dot { color: #334155; }
 
     /* ── Layout ── */
-    main { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 
     /* ── Section dividers ── */
     .divider { display: flex; align-items: center; gap: .75rem; margin: 2rem 0 1.25rem; }
@@ -63,7 +63,7 @@
     .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }
     table { width: 100%; border-collapse: collapse; font-size: .875rem; }
     thead tr { background: #1e3a5f; }
-    thead th { padding: .7rem 1rem; text-align: right; font-weight: 600; font-size: .7rem; text-transform: uppercase; letter-spacing: .5px; color: #93c5fd; white-space: nowrap; border-bottom: 2px solid #334155; }
+    thead th { padding: .7rem 1rem; text-align: right; font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: #93c5fd; white-space: nowrap; border-bottom: 2px solid #334155; }
     thead th:first-child { text-align: left; }
     tbody tr:nth-child(odd)  { background: #141b2d; }
     tbody tr:nth-child(even) { background: #1a2438; }
@@ -72,7 +72,7 @@
     tbody td { padding: .6rem 1rem; text-align: right; border-bottom: 1px solid #1e293b; font-variant-numeric: tabular-nums; color: #cbd5e1; white-space: nowrap; }
     tbody td:first-child { text-align: left; color: #94a3b8; font-size: .82rem; }
 
-    /* Highlight the newest (top) row */
+    /* Highlight newest (top) row */
     tbody tr.row-newest td { background: #182844; color: #f1f5f9; font-weight: 600; }
     tbody tr.row-newest td:first-child { color: #f1f5f9; }
 
@@ -157,12 +157,12 @@
         + '<span class="card-date">' + esc(row.date) + '</span>'
       + '</div>'
       + '<div class="stats-grid">'
-        + mkStat('Weekly High',    row.weekly_high,    '')
-        + mkStat('Weekly Low',     row.weekly_low,     '')
-        + mkStat('Session High',   row.session_high,   '')
-        + mkStat('Session Low',    row.session_low,    '')
-        + mkStat('Session Avg',    row.session_avg,    '')
-        + mkStat('Avg Change',     row.session_change, d)
+        + mkStat('Weekly High',      row.weekly_high,    '')
+        + mkStat('Weekly Low',       row.weekly_low,     '')
+        + mkStat('Session High',     row.session_high,   '')
+        + mkStat('Session Low',      row.session_low,    '')
+        + mkStat('Session Average',  row.session_avg,    '')
+        + mkStat('Average Change',   row.session_change, d)
       + '</div>'
     + '</div>';
   }
@@ -191,8 +191,13 @@
     }).join('');
     return '<div class="table-wrap"><table>'
       + '<thead><tr>'
-      + '<th>Date</th><th>Wkly High</th><th>Wkly Low</th>'
-      + '<th>Sess High</th><th>Sess Low</th><th>Sess Avg</th><th>Avg Change</th>'
+      + '<th>Date</th>'
+      + '<th>Weekly High</th>'
+      + '<th>Weekly Low</th>'
+      + '<th>Session High</th>'
+      + '<th>Session Low</th>'
+      + '<th>Session Average</th>'
+      + '<th>Average Change</th>'
       + '</tr></thead>'
       + '<tbody>' + trs + '</tbody>'
       + '</table></div>';
