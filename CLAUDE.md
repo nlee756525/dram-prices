@@ -6,6 +6,112 @@
 
 ---
 
+## Routine Session — Start Here
+
+This section is written for a scheduled Claude session that wakes up with no memory of prior runs.
+Read this before doing anything else.
+
+### Your job in one sentence
+Check whether today's DRAM prices are already recorded; if not, trigger the GitHub Actions
+scraper and monitor it; notify the user only if something goes wrong or is missing.
+
+---
+
+### Step-by-step checklist
+
+**Step 1 — Check current data state (no auth required)**
+
+```bash
+curl -s "https://raw.githubusercontent.com/nlee756525/dram-prices/main/history.json"
+```
+
+- Parse the last entry in `ddr5[]`. If its `date` matches today (`M/D/YYYY`, no leading zeros)
+  → data is current. **Exit silently.**
+- If today is Saturday or Sunday → DDR5 does not update on weekends. **Exit silently.**
+- If the date is stale (no entry for today) → continue to Step 2.
+
+---
+
+**Step 2 — Check whether GitHub Actions already ran today**
+
+```bash
+curl -s -H "Authorization: token TOKEN" \
+  "https://api.github.com/repos/nlee756525/dram-prices/actions/runs?per_page=5"
+```
+
+Look at the most recent run whose `name` or `path` contains `scrape`:
+
+| `created_at` | `conclusion` | Action |
+|---|---|---|
+| Today, `success` | Scraper ran and either added data or found no update needed | Exit silently |
+| Today, `failure` | Scraper crashed | **Notify user** |
+| Today, `in_progress` | Still running | Wait up to 15 min, then re-check |
+| Not today / no runs | Workflow hasn't fired yet | Continue to Step 3 |
+
+---
+
+**Step 3 — Trigger the GitHub Actions workflow**
+
+```bash
+curl -s -X POST \
+  -H "Authorization: token TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"ref":"main"}' \
+  "https://api.github.com/repos/nlee756525/dram-prices/actions/workflows/scrape.yml/dispatches"
+```
+
+Then poll the runs endpoint every 60 seconds (up to 15 minutes) until `conclusion` is set.
+
+---
+
+**Step 4 — Verify**
+
+Re-fetch `history.json` and confirm today's DDR5 entry now exists.
+- Entry present → **Exit silently.**
+- Entry still missing after a successful workflow run → **Notify user** — the scraper may
+  have silently skipped (e.g., it detected today's date was already present before the run
+  but a manual entry race condition occurred). Include the workflow run URL in the notification.
+
+---
+
+### When to notify vs. stay silent
+
+The user should **never** receive a notification that says "all is well." Silence means success.
+
+**Notify the user when:**
+- The GitHub Actions workflow concluded with `failure`
+- The workflow completed as `success` but today's data is still absent from `history.json`
+- The workflow did not complete within 15 minutes (timeout)
+- You cannot authenticate to the GitHub API (bad/expired token)
+- It is a weekday and `history.json` has not been updated in more than 1 business day
+
+**Stay silent when:**
+- Today's data already exists in `history.json` at the start of the run
+- The workflow ran successfully and today's data is confirmed after it finishes
+- It is a weekend (Saturday or Sunday)
+
+---
+
+### GitHub token
+
+The token is provided by the user in the conversation that set up this routine.
+It is **not** stored anywhere in this repo (doing so would publicly expose it).
+Look for it in the session context. It has `repo` scope on `nlee756525/dram-prices`.
+
+**Never commit the token to any file in this repo.**
+
+---
+
+### Quick-reference API commands
+
+| Task | Command |
+|---|---|
+| Read history.json (no auth) | `curl -s "https://raw.githubusercontent.com/nlee756525/dram-prices/main/history.json"` |
+| List recent workflow runs | `curl -s -H "Authorization: token TOKEN" "https://api.github.com/repos/nlee756525/dram-prices/actions/runs?per_page=5"` |
+| Trigger scrape workflow | `curl -s -X POST -H "Authorization: token TOKEN" -H "Content-Type: application/json" -d '{"ref":"main"}' "https://api.github.com/repos/nlee756525/dram-prices/actions/workflows/scrape.yml/dispatches"` |
+| Get history.json + SHA | `curl -s -H "Authorization: token TOKEN" "https://api.github.com/repos/nlee756525/dram-prices/contents/history.json"` |
+
+
 ## What This Project Does
 
 Tracks two spot price rows from https://www.dramexchange.com/ and displays them
