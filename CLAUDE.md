@@ -151,6 +151,119 @@ Token needs `repo` scope on the `nlee756525/dram-prices` repository.
 
 ---
 
+---
+
+## How the Playwright Scraper Bypasses DRAMeXchange's 403
+
+DRAMeXchange blocks every plain HTTP client immediately (curl, requests, WebFetch all return 403).
+The solution is to launch a real headless Chromium browser via Playwright and disguise it so the
+site cannot distinguish it from a normal human visitor. The following techniques are all required —
+removing any one of them may cause the 403 to return.
+
+### 1. Launch flags that hide automation
+
+```python
+browser = await pw.chromium.launch(
+    headless=True,
+    args=[
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-blink-features=AutomationControlled",  # critical
+    ]
+)
+```
+
+`--disable-blink-features=AutomationControlled` stops Chromium from advertising itself as
+a controlled browser. Without it, the site's bot check sees through the disguise immediately.
+
+### 2. Patch the `navigator.webdriver` property
+
+Browsers under automation expose `navigator.webdriver === true` to JavaScript. DRAMeXchange
+checks this. Patch it before any page script runs:
+
+```python
+await ctx.add_init_script(
+    "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+)
+```
+
+This must be set on the **context** (not the page) so it fires before the page's own JS.
+
+### 3. Spoof a real Windows/Chrome user-agent
+
+```python
+ctx = await browser.new_context(
+    user_agent=(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    viewport={"width": 1280, "height": 900},
+    locale="en-US",
+    ...
+)
+```
+
+A Linux headless user-agent string is a strong bot signal. Spoofing Windows + Chrome 124
+matches the most common real-browser fingerprint.
+
+### 4. Send realistic browser headers
+
+Plain HTTP clients omit the `Sec-Fetch-*` headers that real browsers always send. Their
+absence is a reliable bot signal:
+
+```python
+extra_http_headers={
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Upgrade-Insecure-Requests": "1",
+}
+```
+
+### 5. Wait for the page to fully render before reading data
+
+DRAMeXchange loads its price tables via JavaScript after the initial HTML response.
+Always wait for actual `<td>` elements before trying to read values:
+
+```python
+await page.wait_for_selector("tr td", timeout=25000)
+await page.wait_for_timeout(2000)  # let any remaining JS finish
+```
+
+Skipping this means you read an empty table or skeleton HTML.
+
+### Reconstructing scrape.py if it ever breaks
+
+If scrape.py needs to be rebuilt from scratch, the full pattern is:
+
+1. `async_playwright` → `chromium.launch(headless=True, args=[...above...])` 
+2. `browser.new_context(user_agent=..., viewport=..., locale=..., extra_http_headers=...)`
+3. `ctx.add_init_script(...)` to patch `navigator.webdriver`
+4. `ctx.new_page()` → `page.goto("https://www.dramexchange.com/", wait_until="load", timeout=45000)`
+5. `page.wait_for_selector("tr td", timeout=25000)` + 2s extra wait
+6. Use `page.locator("tr").filter(has_text=<keyword>)` to find the DDR5 and TLC rows
+7. Read each row's `<td>` cells (expect 7 columns: name, weekly high, weekly low, session high, session low, session avg, avg change)
+8. Parse prices with `$XX.XXX` format and changes with `+X.XX%` / `-X.XX%` / `0.00%`
+
+**If Playwright itself starts getting blocked:** the next escalation is `playwright-extra`
+with the `puppeteer-extra-plugin-stealth` port for Python. See the Troubleshooting table above.
+
+### What does NOT work (do not attempt)
+
+- `requests.get()` / `urllib` / `curl` — always 403, no exceptions
+- `WebFetch` tool (Claude's built-in) — same as above, plain HTTP
+- Adding only a user-agent header to a plain request — not enough; `Sec-Fetch-*` headers
+  and the `navigator.webdriver` patch are also required
+- Running a plain `requests` session from a residential IP — the residential IP helps but
+  the bot fingerprint check still triggers without the full Playwright setup
+
+
+---
+
 ## History of Changes (as of June 2026)
 
 - **May 2026:** Project created; scrape.py + GitHub Actions workflow set up
