@@ -22,11 +22,21 @@
     /* ── Section dividers ── */
     .divider { display: flex; align-items: center; gap: .75rem; margin: 2rem 0 1.25rem; }
     .divider:first-child { margin-top: 0; }
-    .divider span { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.6px; color: #475569; white-space: nowrap; }
+    .divider-label { display: flex; align-items: baseline; gap: .6rem; white-space: nowrap; }
+    .divider-label span { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.6px; color: #475569; }
+    .divider-label small { font-size: .68rem; color: #334155; font-weight: 500; letter-spacing: .4px; }
     .divider::after { content: ''; flex: 1; height: 1px; background: #1e293b; }
 
-    /* ── Latest cards ── */
-    .latest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: .5rem; }
+    /* ── Latest UPDATE section ── */
+    .latest-section { background: linear-gradient(135deg, #0d1626 0%, #0d1117 100%); border: 1px solid #1e3050; border-radius: 14px; padding: 1.5rem; margin-bottom: 2.5rem; }
+    .latest-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: .5rem; }
+    .latest-badge { display: inline-flex; align-items: center; gap: .45rem; background: #1d3461; border: 1px solid #2d5a9e; border-radius: 8px; padding: .35rem .85rem; }
+    .latest-badge .dot-live { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
+    .latest-badge span { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #93c5fd; }
+    .latest-date-label { font-size: .78rem; color: #64748b; }
+    .latest-date-label strong { color: #94a3b8; }
+
+    .latest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .latest-card { border-radius: 12px; padding: 1.25rem 1.5rem; border: 1px solid; }
     .latest-card.dram { background: #0d1f3c; border-color: #1e40af; }
     .latest-card.nand { background: #052e16; border-color: #166534; }
@@ -53,11 +63,12 @@
     .down { color: #f87171; }
     .flat { color: #94a3b8; }
 
-    /* ── History sections ── */
+    /* ── History / Running List ── */
     .hist-section { margin-bottom: 2.5rem; }
-    .hist-header { display: flex; align-items: center; gap: .75rem; margin-bottom: .85rem; }
+    .hist-header { display: flex; align-items: center; gap: .75rem; margin-bottom: .85rem; flex-wrap: wrap; }
     .hist-header h3 { font-size: 1rem; font-weight: 600; color: #f1f5f9; }
     .hist-header .sub { font-size: .75rem; color: #64748b; }
+    .hist-header .count { font-size: .7rem; color: #334155; background: #1e293b; border: 1px solid #334155; border-radius: 999px; padding: .1rem .55rem; }
 
     /* ── Tables ── */
     .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }
@@ -105,14 +116,31 @@
 
 <main>
 
-  <!-- ═══════════════ LATEST UPDATE (TOP) ═══════════════ -->
-  <div class="divider"><span>Latest Update</span></div>
-  <div class="latest-grid" id="latest-grid">
-    <div class="latest-card empty">Loading data…</div>
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!--   LATEST UPDATE — TOP                              -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="latest-section">
+    <div class="latest-section-header">
+      <div class="latest-badge">
+        <div class="dot-live"></div>
+        <span>Latest Prices</span>
+      </div>
+      <div class="latest-date-label" id="latest-date-label"></div>
+    </div>
+    <div class="latest-grid" id="latest-grid">
+      <div class="latest-card empty">Loading data…</div>
+    </div>
   </div>
 
-  <!-- ═══════════════ PRICE HISTORY (BOTTOM) ════════════ -->
-  <div class="divider"><span>Price History</span></div>
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!--   PRICE HISTORY — RUNNING LIST (BOTTOM)            -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="divider">
+    <div class="divider-label">
+      <span>Price History</span>
+      <small>newest first</small>
+    </div>
+  </div>
 
   <div class="hist-section" id="ddr5-section"></div>
   <div class="hist-section" id="tlc-section"></div>
@@ -126,6 +154,17 @@
 <script>
 (function () {
   'use strict';
+
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function formatDate(s) {
+    var p = String(s || '').split('/');
+    if (p.length !== 3) return s;
+    var m = parseInt(p[0], 10) - 1;
+    var d = parseInt(p[1], 10);
+    if (isNaN(m) || isNaN(d) || m < 0 || m > 11) return s;
+    return MONTHS[m] + ' ' + d + ', ' + p[2];
+  }
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -154,7 +193,7 @@
           + '<div><div class="card-name">' + esc(name) + '</div>'
           + '<div class="card-sub">' + esc(sub) + '</div></div>'
         + '</div>'
-        + '<span class="card-date">' + esc(row.date) + '</span>'
+        + '<span class="card-date">' + esc(formatDate(row.date)) + '</span>'
       + '</div>'
       + '<div class="stats-grid">'
         + mkStat('Weekly High',      row.weekly_high,    '')
@@ -178,7 +217,7 @@
     var trs = rev.map(function (r, i) {
       var d = dir(r.session_change);
       var isNew = i === 0;
-      var dateCell = esc(r.date) + (isNew ? '<span class="new-tag">latest</span>' : '');
+      var dateCell = esc(formatDate(r.date)) + (isNew ? '<span class="new-tag">latest</span>' : '');
       return '<tr' + (isNew ? ' class="row-newest"' : '') + '>'
         + '<td>' + dateCell + '</td>'
         + '<td>' + esc(r.weekly_high)    + '</td>'
@@ -197,18 +236,20 @@
       + '<th>Session High</th>'
       + '<th>Session Low</th>'
       + '<th>Session Average</th>'
-      + '<th>Average Change</th>'
+      + '<th>Avg Change</th>'
       + '</tr></thead>'
       + '<tbody>' + trs + '</tbody>'
       + '</table></div>';
   }
 
   function histSection(el, rows, type, name, sub) {
+    var count = rows ? rows.length : 0;
     el.innerHTML =
       '<div class="hist-header">'
         + '<span class="chip chip-' + type + '">' + type.toUpperCase() + '</span>'
         + '<h3>' + esc(name) + '</h3>'
         + '<span class="sub">' + esc(sub) + '</span>'
+        + '<span class="count">' + count + ' entries</span>'
       + '</div>'
       + histTable(rows);
   }
@@ -218,7 +259,12 @@
     var lt = data.tlc[data.tlc.length  - 1] || null;
 
     document.getElementById('hdr-date').textContent =
-      'Last updated: ' + (ld ? ld.date : '—');
+      'Last updated: ' + (ld ? formatDate(ld.date) : '—');
+
+    document.getElementById('latest-date-label').innerHTML =
+      ld ? 'DDR5 as of <strong>' + esc(formatDate(ld.date)) + '</strong>'
+           + (lt ? '&nbsp;&nbsp;·&nbsp;&nbsp;TLC as of <strong>' + esc(formatDate(lt.date)) + '</strong>' : '')
+         : '';
 
     document.getElementById('latest-grid').innerHTML =
       latestCard(ld, 'dram', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz') +
