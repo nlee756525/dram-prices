@@ -318,7 +318,7 @@
   ],
   "tlc": [
     {
-      "date": "5/4/2026",
+      "date": "4/27/2026",
       "weekly_high": "$21.500",
       "weekly_low": "$16.000",
       "session_high": "$21.500",
@@ -327,7 +327,7 @@
       "session_change": "-0.57%"
     },
     {
-      "date": "5/11/2026",
+      "date": "5/4/2026",
       "weekly_high": "$21.500",
       "weekly_low": "$16.000",
       "session_high": "$21.500",
@@ -336,7 +336,7 @@
       "session_change": "+0.34%"
     },
     {
-      "date": "5/18/2026",
+      "date": "5/11/2026",
       "weekly_high": "$22.000",
       "weekly_low": "$16.000",
       "session_high": "$22.000",
@@ -345,7 +345,7 @@
       "session_change": "+0.81%"
     },
     {
-      "date": "5/25/2026",
+      "date": "5/18/2026",
       "weekly_high": "$22.000",
       "weekly_low": "$16.000",
       "session_high": "$22.000",
@@ -354,7 +354,7 @@
       "session_change": "-0.33%"
     },
     {
-      "date": "6/8/2026",
+      "date": "6/1/2026",
       "weekly_high": "$22.500",
       "weekly_low": "$16.500",
       "session_high": "$22.500",
@@ -363,7 +363,7 @@
       "session_change": "+0.01%"
     },
     {
-      "date": "6/15/2026",
+      "date": "6/8/2026",
       "weekly_high": "$22.500",
       "weekly_low": "$16.500",
       "session_high": "$22.500",
@@ -372,7 +372,7 @@
       "session_change": "-0.22%"
     },
     {
-      "date": "6/22/2026",
+      "date": "6/15/2026",
       "weekly_high": "$22.000",
       "weekly_low": "$16.000",
       "session_high": "$22.000",
