@@ -9,52 +9,51 @@
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
 
     /* ── Header ── */
-    header { background: #0d1117; border-bottom: 1px solid #21262d; padding: 1.4rem 2rem; text-align: center; }
-    header h1 { font-size: 1.6rem; font-weight: 700; color: #f8fafc; margin-bottom: .4rem; }
+    header { background: #0d1117; border-bottom: 1px solid #21262d; padding: 1.2rem 2rem; text-align: center; }
+    header h1 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: .35rem; }
     .header-meta { font-size: .78rem; color: #64748b; display: flex; justify-content: center; align-items: center; gap: .85rem; flex-wrap: wrap; }
     .header-meta a { color: #60a5fa; text-decoration: none; }
     .header-meta a:hover { text-decoration: underline; }
     .dot { color: #334155; }
 
-    /* ── Layout ── */
-    main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    /* ── Layout — wider for side-by-side tables ── */
+    main { max-width: 1500px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
 
     /* ── Section dividers ── */
-    .divider { display: flex; align-items: center; gap: .75rem; margin: 2rem 0 1.25rem; }
-    .divider:first-child { margin-top: 0; }
+    .divider { display: flex; align-items: center; gap: .75rem; margin: 1.75rem 0 1.1rem; }
     .divider-label { display: flex; align-items: baseline; gap: .6rem; white-space: nowrap; }
     .divider-label span { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.6px; color: #475569; }
     .divider-label small { font-size: .68rem; color: #334155; font-weight: 500; letter-spacing: .4px; }
     .divider::after { content: ''; flex: 1; height: 1px; background: #1e293b; }
 
     /* ── Latest UPDATE section ── */
-    .latest-section { background: linear-gradient(135deg, #0d1626 0%, #0d1117 100%); border: 1px solid #1e3050; border-radius: 14px; padding: 1.5rem; margin-bottom: 2.5rem; }
-    .latest-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: .5rem; }
-    .latest-badge { display: inline-flex; align-items: center; gap: .45rem; background: #1d3461; border: 1px solid #2d5a9e; border-radius: 8px; padding: .35rem .85rem; }
+    .latest-section { background: linear-gradient(135deg, #0d1626 0%, #0d1117 100%); border: 1px solid #1e3050; border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; }
+    .latest-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1rem; flex-wrap: wrap; gap: .5rem; }
+    .latest-badge { display: inline-flex; align-items: center; gap: .45rem; background: #1d3461; border: 1px solid #2d5a9e; border-radius: 8px; padding: .3rem .8rem; }
     .latest-badge .dot-live { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
     .latest-badge span { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #93c5fd; }
     .latest-date-label { font-size: .78rem; color: #64748b; }
     .latest-date-label strong { color: #94a3b8; }
 
     .latest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .latest-card { border-radius: 12px; padding: 1.25rem 1.5rem; border: 1px solid; }
+    .latest-card { border-radius: 12px; padding: 1.1rem 1.4rem; border: 1px solid; }
     .latest-card.dram { background: #0d1f3c; border-color: #1e40af; }
     .latest-card.nand { background: #052e16; border-color: #166534; }
-    .latest-card.empty { background: #1e293b; border-color: #334155; color: #475569; display: flex; align-items: center; justify-content: center; min-height: 7rem; font-size: .9rem; grid-column: 1/-1; }
+    .latest-card.empty { background: #1e293b; border-color: #334155; color: #475569; display: flex; align-items: center; justify-content: center; min-height: 6rem; font-size: .9rem; grid-column: 1/-1; }
 
-    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; gap: .5rem; flex-wrap: wrap; }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .9rem; gap: .5rem; flex-wrap: wrap; }
     .card-title { display: flex; align-items: center; gap: .6rem; }
-    .card-name { font-size: .95rem; font-weight: 600; color: #f1f5f9; }
-    .card-sub  { font-size: .72rem; color: #64748b; margin-top: .1rem; }
-    .card-date { font-size: .74rem; color: #94a3b8; background: rgba(0,0,0,.3); padding: .2rem .65rem; border-radius: 999px; border: 1px solid #334155; white-space: nowrap; }
+    .card-name { font-size: .92rem; font-weight: 600; color: #f1f5f9; }
+    .card-sub  { font-size: .7rem; color: #64748b; margin-top: .1rem; }
+    .card-date { font-size: .72rem; color: #94a3b8; background: rgba(0,0,0,.3); padding: .18rem .6rem; border-radius: 999px; border: 1px solid #334155; white-space: nowrap; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; }
-    .stat { background: rgba(0,0,0,.3); border-radius: 8px; padding: .6rem .8rem; }
-    .stat-label { font-size: .6rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; margin-bottom: .25rem; }
-    .stat-value { font-size: 1rem; font-weight: 600; color: #e2e8f0; font-variant-numeric: tabular-nums; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+    .stat { background: rgba(0,0,0,.3); border-radius: 8px; padding: .5rem .75rem; }
+    .stat-label { font-size: .58rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; margin-bottom: .2rem; }
+    .stat-value { font-size: .95rem; font-weight: 600; color: #e2e8f0; font-variant-numeric: tabular-nums; }
 
     /* ── Chips ── */
-    .chip { padding: .22rem .65rem; border-radius: 6px; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .chip { padding: .2rem .6rem; border-radius: 6px; font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
     .chip-dram { background: #1d4ed8; color: #bfdbfe; }
     .chip-nand { background: #065f46; color: #a7f3d0; }
 
@@ -63,38 +62,42 @@
     .down { color: #f87171; }
     .flat { color: #94a3b8; }
 
-    /* ── History / Running List ── */
-    .hist-section { margin-bottom: 2.5rem; }
-    .hist-header { display: flex; align-items: center; gap: .75rem; margin-bottom: .85rem; flex-wrap: wrap; }
-    .hist-header h3 { font-size: 1rem; font-weight: 600; color: #f1f5f9; }
-    .hist-header .sub { font-size: .75rem; color: #64748b; }
-    .hist-header .count { font-size: .7rem; color: #334155; background: #1e293b; border: 1px solid #334155; border-radius: 999px; padding: .1rem .55rem; }
+    /* ── History grid — side by side ── */
+    .hist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+    .hist-section { min-width: 0; }
+    .hist-header { display: flex; align-items: center; gap: .65rem; margin-bottom: .75rem; flex-wrap: wrap; }
+    .hist-header h3 { font-size: .95rem; font-weight: 600; color: #f1f5f9; }
+    .hist-header .sub { font-size: .72rem; color: #64748b; }
+    .hist-header .count { font-size: .67rem; color: #334155; background: #1e293b; border: 1px solid #334155; border-radius: 999px; padding: .08rem .5rem; }
 
-    /* ── Tables ── */
+    /* ── Tables — compact rows ── */
     .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }
-    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
     thead tr { background: #1e3a5f; }
-    thead th { padding: .7rem 1rem; text-align: right; font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: #93c5fd; white-space: nowrap; border-bottom: 2px solid #334155; }
+    thead th { padding: .55rem .75rem; text-align: right; font-weight: 600; font-size: .67rem; text-transform: uppercase; letter-spacing: .4px; color: #93c5fd; white-space: nowrap; border-bottom: 2px solid #334155; }
     thead th:first-child { text-align: left; }
     tbody tr:nth-child(odd)  { background: #141b2d; }
     tbody tr:nth-child(even) { background: #1a2438; }
     tbody tr:hover           { background: #1e3050; }
     tbody tr:last-child td   { border-bottom: none; }
-    tbody td { padding: .6rem 1rem; text-align: right; border-bottom: 1px solid #1e293b; font-variant-numeric: tabular-nums; color: #cbd5e1; white-space: nowrap; }
-    tbody td:first-child { text-align: left; color: #94a3b8; font-size: .82rem; }
+    tbody td { padding: .38rem .75rem; text-align: right; border-bottom: 1px solid #1e293b; font-variant-numeric: tabular-nums; color: #cbd5e1; white-space: nowrap; }
+    tbody td:first-child { text-align: left; color: #94a3b8; font-size: .78rem; }
 
-    /* Highlight newest (top) row */
+    /* Highlight newest row */
     tbody tr.row-newest td { background: #182844; color: #f1f5f9; font-weight: 600; }
     tbody tr.row-newest td:first-child { color: #f1f5f9; }
 
     .chg { font-weight: 700; }
-    .new-tag { display: inline-block; background: #1d4ed8; color: #bfdbfe; font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: .1rem .4rem; border-radius: 4px; margin-left: .4rem; vertical-align: middle; }
+    .new-tag { display: inline-block; background: #1d4ed8; color: #bfdbfe; font-size: .55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: .08rem .35rem; border-radius: 4px; margin-left: .35rem; vertical-align: middle; }
     .empty-msg { color: #475569; font-size: .85rem; padding: 1.5rem; text-align: center; }
 
     /* ── Footer ── */
     footer { text-align: center; font-size: .72rem; color: #475569; padding: 1.5rem 0 2rem; border-top: 1px solid #1e293b; }
     footer a { color: #60a5fa; text-decoration: none; }
 
+    @media (max-width: 900px) {
+      .hist-grid { grid-template-columns: 1fr; }
+    }
     @media (max-width: 600px) {
       .latest-grid { grid-template-columns: 1fr; }
       .stats-grid  { grid-template-columns: repeat(2, 1fr); }
@@ -133,7 +136,7 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════ -->
-  <!--   PRICE HISTORY — RUNNING LIST (BOTTOM)            -->
+  <!--   PRICE HISTORY — SIDE BY SIDE                     -->
   <!-- ═══════════════════════════════════════════════════ -->
   <div class="divider">
     <div class="divider-label">
@@ -142,8 +145,10 @@
     </div>
   </div>
 
-  <div class="hist-section" id="ddr5-section"></div>
-  <div class="hist-section" id="tlc-section"></div>
+  <div class="hist-grid">
+    <div class="hist-section" id="ddr5-section"></div>
+    <div class="hist-section" id="tlc-section"></div>
+  </div>
 
 </main>
 
@@ -196,12 +201,12 @@
         + '<span class="card-date">' + esc(formatDate(row.date)) + '</span>'
       + '</div>'
       + '<div class="stats-grid">'
-        + mkStat('Weekly High',      row.weekly_high,    '')
-        + mkStat('Weekly Low',       row.weekly_low,     '')
-        + mkStat('Session High',     row.session_high,   '')
-        + mkStat('Session Low',      row.session_low,    '')
-        + mkStat('Session Average',  row.session_avg,    '')
-        + mkStat('Average Change',   row.session_change, d)
+        + mkStat('Weekly High',     row.weekly_high,    '')
+        + mkStat('Weekly Low',      row.weekly_low,     '')
+        + mkStat('Session High',    row.session_high,   '')
+        + mkStat('Session Low',     row.session_low,    '')
+        + mkStat('Session Average', row.session_avg,    '')
+        + mkStat('Avg Change',      row.session_change, d)
       + '</div>'
     + '</div>';
   }
@@ -220,23 +225,23 @@
       var dateCell = esc(formatDate(r.date)) + (isNew ? '<span class="new-tag">latest</span>' : '');
       return '<tr' + (isNew ? ' class="row-newest"' : '') + '>'
         + '<td>' + dateCell + '</td>'
-        + '<td>' + esc(r.weekly_high)    + '</td>'
-        + '<td>' + esc(r.weekly_low)     + '</td>'
-        + '<td>' + esc(r.session_high)   + '</td>'
-        + '<td>' + esc(r.session_low)    + '</td>'
-        + '<td>' + esc(r.session_avg)    + '</td>'
+        + '<td>' + esc(r.weekly_high)  + '</td>'
+        + '<td>' + esc(r.weekly_low)   + '</td>'
+        + '<td>' + esc(r.session_high) + '</td>'
+        + '<td>' + esc(r.session_low)  + '</td>'
+        + '<td>' + esc(r.session_avg)  + '</td>'
         + '<td class="chg ' + d + '">' + arrow(d) + esc(r.session_change) + '</td>'
       + '</tr>';
     }).join('');
     return '<div class="table-wrap"><table>'
       + '<thead><tr>'
       + '<th>Date</th>'
-      + '<th>Weekly High</th>'
-      + '<th>Weekly Low</th>'
-      + '<th>Session High</th>'
-      + '<th>Session Low</th>'
-      + '<th>Session Average</th>'
-      + '<th>Avg Change</th>'
+      + '<th>Wk High</th>'
+      + '<th>Wk Low</th>'
+      + '<th>Sess High</th>'
+      + '<th>Sess Low</th>'
+      + '<th>Sess Avg</th>'
+      + '<th>Chg %</th>'
       + '</tr></thead>'
       + '<tbody>' + trs + '</tbody>'
       + '</table></div>';
