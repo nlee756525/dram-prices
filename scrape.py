@@ -235,9 +235,14 @@ async def main():
             last_dt    = datetime.strptime(last_tlc["date"], "%m/%d/%Y").date()
             days_since = (date.today() - last_dt).days
             if days_since >= 6:
-                hist["tlc"].append(tlc_scraped)
-                added.append("512Gb TLC")
-                print(f"  TLC  → {tlc_scraped}")
+                price_keys = ("weekly_high", "weekly_low", "session_high",
+                              "session_low", "session_avg", "session_change")
+                if all(tlc_scraped[k] == last_tlc[k] for k in price_keys):
+                    print(f"  TLC skipped — values unchanged from {last_tlc['date']}.")
+                else:
+                    hist["tlc"].append(tlc_scraped)
+                    added.append("512Gb TLC")
+                    print(f"  TLC  → {tlc_scraped}")
             else:
                 print(f"  TLC skipped ({days_since}d since last; need ≥6).")
         else:
