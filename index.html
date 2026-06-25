@@ -1,496 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DRAM &amp; NAND Flash Spot Prices</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:       #0f1117;
-      --surface:  #1a1d2e;
-      --surface2: #22263a;
-      --border:   #2d3148;
-      --text:     #e2e8f0;
-      --muted:    #8892a4;
-      --ddr5:     #3b82f6;
-      --ddr5-dim: #1e3a5f;
-      --tlc:      #22c55e;
-      --tlc-dim:  #14532d;
-      --up:       #22c55e;
-      --down:     #ef4444;
-      --flat:     #6b7280;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .wrap {
-      max-width: 1500px;
-      margin: 0 auto;
-      padding: 24px 16px 48px;
-    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
 
     /* ── Header ── */
-    .header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 28px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .header h1 {
-      font-size: 20px;
-      font-weight: 700;
-    }
-    .header-meta {
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .header-meta a { color: var(--muted); text-decoration: none; }
-    .header-meta a:hover { color: var(--text); }
+    header { background: #0d1117; border-bottom: 1px solid #21262d; padding: 1.2rem 2rem; text-align: center; }
+    header h1 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: .35rem; }
+    .header-meta { font-size: .78rem; color: #64748b; display: flex; justify-content: center; align-items: center; gap: .85rem; flex-wrap: wrap; }
+    .header-meta a { color: #60a5fa; text-decoration: none; }
+    .header-meta a:hover { text-decoration: underline; }
+    .dot { color: #334155; }
 
-    /* ── Section labels ── */
-    .section-label {
-      font-size: 10.5px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
+    /* ── Layout — wider for side-by-side tables ── */
+    main { max-width: 1500px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
 
-    /* ── Latest cards ── */
-    .latest-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 40px;
-    }
+    /* ── Section dividers ── */
+    .divider { display: flex; align-items: center; gap: .75rem; margin: 1.75rem 0 1.1rem; }
+    .divider-label { display: flex; align-items: baseline; gap: .6rem; white-space: nowrap; }
+    .divider-label span { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.6px; color: #475569; }
+    .divider-label small { font-size: .68rem; color: #334155; font-weight: 500; letter-spacing: .4px; }
+    .divider::after { content: ''; flex: 1; height: 1px; background: #1e293b; }
 
-    .latest-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 22px 24px;
-      position: relative;
-    }
-    .latest-card.ddr5 { border-top: 3px solid var(--ddr5); }
-    .latest-card.tlc  { border-top: 3px solid var(--tlc); }
+    /* ── Latest UPDATE section ── */
+    .latest-section { background: linear-gradient(135deg, #0d1626 0%, #0d1117 100%); border: 1px solid #1e3050; border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; }
+    .latest-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1rem; flex-wrap: wrap; gap: .5rem; }
+    .latest-badge { display: inline-flex; align-items: center; gap: .45rem; background: #1d3461; border: 1px solid #2d5a9e; border-radius: 8px; padding: .3rem .8rem; }
+    .latest-badge .dot-live { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
+    .latest-badge span { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #93c5fd; }
+    .latest-date-label { font-size: .78rem; color: #64748b; }
+    .latest-date-label strong { color: #94a3b8; }
 
-    .chip {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      padding: 3px 10px;
-      border-radius: 20px;
-      margin-bottom: 6px;
-    }
-    .ddr5 .chip { background: var(--ddr5-dim); color: var(--ddr5); }
-    .tlc  .chip { background: var(--tlc-dim);  color: var(--tlc); }
+    .latest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .latest-card { border-radius: 12px; padding: 1.1rem 1.4rem; border: 1px solid; }
+    .latest-card.dram { background: #0d1f3c; border-color: #1e40af; }
+    .latest-card.nand { background: #052e16; border-color: #166534; }
+    .latest-card.empty { background: #1e293b; border-color: #334155; color: #475569; display: flex; align-items: center; justify-content: center; min-height: 6rem; font-size: .9rem; grid-column: 1/-1; }
 
-    .card-product {
-      font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 3px;
-    }
-    .card-date {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 18px;
-    }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .9rem; gap: .5rem; flex-wrap: wrap; }
+    .card-title { display: flex; align-items: center; gap: .6rem; }
+    .card-name { font-size: .92rem; font-weight: 600; color: #f1f5f9; }
+    .card-sub  { font-size: .7rem; color: #64748b; margin-top: .1rem; }
+    .card-date { font-size: .72rem; color: #94a3b8; background: rgba(0,0,0,.3); padding: .18rem .6rem; border-radius: 999px; border: 1px solid #334155; white-space: nowrap; }
 
-    .card-avg {
-      font-size: 40px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-      margin-bottom: 10px;
-    }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+    .stat { background: rgba(0,0,0,.3); border-radius: 8px; padding: .5rem .75rem; }
+    .stat-label { font-size: .58rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; margin-bottom: .2rem; }
+    .stat-value { font-size: .95rem; font-weight: 600; color: #e2e8f0; font-variant-numeric: tabular-nums; }
 
-    .card-change {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 22px;
-    }
-    .card-change.up   { color: var(--up); }
-    .card-change.down { color: var(--down); }
-    .card-change.flat { color: var(--flat); }
+    /* ── Chips ── */
+    .chip { padding: .2rem .6rem; border-radius: 6px; font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .chip-dram { background: #1d4ed8; color: #bfdbfe; }
+    .chip-nand { background: #065f46; color: #a7f3d0; }
 
-    .metrics {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 24px;
-      border-top: 1px solid var(--border);
-      padding-top: 18px;
-    }
-    .metric-label {
-      font-size: 10.5px;
-      color: var(--muted);
-      font-weight: 500;
-      margin-bottom: 1px;
-    }
-    .metric-value {
-      font-size: 13px;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-    }
+    /* ── Colors ── */
+    .up   { color: #4ade80; }
+    .down { color: #f87171; }
+    .flat { color: #94a3b8; }
 
-    /* ── Status badge ── */
-    .live-badge {
-      position: absolute;
-      top: 18px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--muted);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--up);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.4; }
-    }
+    /* ── History grid — side by side ── */
+    .hist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+    .hist-section { min-width: 0; }
+    .hist-header { display: flex; align-items: center; gap: .65rem; margin-bottom: .75rem; flex-wrap: wrap; }
+    .hist-header h3 { font-size: .95rem; font-weight: 600; color: #f1f5f9; }
+    .hist-header .sub { font-size: .72rem; color: #64748b; }
+    .hist-header .count { font-size: .67rem; color: #334155; background: #1e293b; border: 1px solid #334155; border-radius: 999px; padding: .08rem .5rem; }
 
-    /* ── History panels ── */
-    .history-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .history-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .panel-header h3 {
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .entry-count {
-      margin-left: auto;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .table-scroll {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    thead th {
-      padding: 8px 12px;
-      text-align: right;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-      background: var(--surface);
-    }
+    /* ── Tables — compact rows ── */
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead tr { background: #1e3a5f; }
+    thead th { padding: .55rem .75rem; text-align: right; font-weight: 600; font-size: .67rem; text-transform: uppercase; letter-spacing: .4px; color: #93c5fd; white-space: nowrap; border-bottom: 2px solid #334155; }
     thead th:first-child { text-align: left; }
+    tbody tr:nth-child(odd)  { background: #141b2d; }
+    tbody tr:nth-child(even) { background: #1a2438; }
+    tbody tr:hover           { background: #1e3050; }
+    tbody tr:last-child td   { border-bottom: none; }
+    tbody td { padding: .38rem .75rem; text-align: right; border-bottom: 1px solid #1e293b; font-variant-numeric: tabular-nums; color: #cbd5e1; white-space: nowrap; }
+    tbody td:first-child { text-align: left; color: #94a3b8; font-size: .78rem; }
 
-    tbody tr {
-      border-bottom: 1px solid rgba(45,49,72,0.5);
-      transition: background 0.12s;
-    }
-    tbody tr:hover { background: var(--surface2); }
+    /* Highlight newest row */
+    tbody tr.row-newest td { background: #182844; color: #f1f5f9; font-weight: 600; }
+    tbody tr.row-newest td:first-child { color: #f1f5f9; }
 
-    /* Highlight the newest row */
-    tbody tr.newest { background: rgba(59,130,246,0.06); }
-    .history-panel.tlc tbody tr.newest { background: rgba(34,197,94,0.06); }
-
-    td {
-      padding: 8px 12px;
-      text-align: right;
-      white-space: nowrap;
-    }
-    td:first-child {
-      text-align: left;
-      color: var(--muted);
-    }
-
-    .new-badge {
-      display: inline-block;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      padding: 1px 6px;
-      border-radius: 4px;
-      margin-left: 6px;
-      vertical-align: middle;
-    }
-    .history-panel.ddr5 .new-badge { background: var(--ddr5-dim); color: var(--ddr5); }
-    .history-panel.tlc  .new-badge { background: var(--tlc-dim);  color: var(--tlc); }
-
-    .chg-up   { color: var(--up);   font-weight: 600; }
-    .chg-down { color: var(--down); font-weight: 600; }
-    .chg-flat { color: var(--flat); }
+    .chg { font-weight: 700; }
+    .new-tag { display: inline-block; background: #1d4ed8; color: #bfdbfe; font-size: .55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: .08rem .35rem; border-radius: 4px; margin-left: .35rem; vertical-align: middle; }
+    .empty-msg { color: #475569; font-size: .85rem; padding: 1.5rem; text-align: center; }
 
     /* ── Footer ── */
-    .footer {
-      margin-top: 40px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .footer a { color: var(--muted); text-decoration: none; }
-    .footer a:hover { color: var(--text); }
+    footer { text-align: center; font-size: .72rem; color: #475569; padding: 1.5rem 0 2rem; border-top: 1px solid #1e293b; }
+    footer a { color: #60a5fa; text-decoration: none; }
 
-    /* ── Responsive ── */
     @media (max-width: 900px) {
-      .latest-grid, .history-grid { grid-template-columns: 1fr; }
+      .hist-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
-      .card-avg { font-size: 30px; }
-      .wrap { padding: 16px 12px 40px; }
+      .latest-grid { grid-template-columns: 1fr; }
+      .stats-grid  { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- Header -->
-  <div class="header">
-    <h1>DRAM &amp; NAND Flash Spot Prices</h1>
-    <div class="header-meta">
-      Source: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
-      &nbsp;·&nbsp; Prices in USD
+<header>
+  <h1>DRAM &amp; NAND Flash Spot Prices</h1>
+  <div class="header-meta">
+    <span id="hdr-date">Loading…</span>
+    <span class="dot">&middot;</span>
+    <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
+    <span class="dot">&middot;</span>
+    <a href="update.html">+ Add Entry</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!--   LATEST UPDATE — TOP                              -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="latest-section">
+    <div class="latest-section-header">
+      <div class="latest-badge">
+        <div class="dot-live"></div>
+        <span>Latest Update</span>
+      </div>
+      <div class="latest-date-label" id="latest-date-label"></div>
+    </div>
+    <div class="latest-grid" id="latest-grid">
+      <div class="latest-card empty">Loading data…</div>
     </div>
   </div>
 
-  <!-- Latest update cards -->
-  <div class="section-label">Latest Update</div>
-  <div class="latest-grid">
-
-    <div class="latest-card ddr5" id="ddr5-card">
-      <span class="live-badge"><span class="live-dot"></span>Live</span>
-      <div class="chip">DRAM</div>
-      <div class="card-product">DDR5 16Gb (2Gx8) 4800/5600</div>
-      <div class="card-date" id="ddr5-date">Loading…</div>
-      <div class="card-avg"  id="ddr5-avg">—</div>
-      <div class="card-change" id="ddr5-change">—</div>
-      <div class="metrics">
-        <div><div class="metric-label">Weekly High</div><div class="metric-value" id="ddr5-wh">—</div></div>
-        <div><div class="metric-label">Weekly Low</div> <div class="metric-value" id="ddr5-wl">—</div></div>
-        <div><div class="metric-label">Session High</div><div class="metric-value" id="ddr5-sh">—</div></div>
-        <div><div class="metric-label">Session Low</div> <div class="metric-value" id="ddr5-sl">—</div></div>
-      </div>
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!--   PRICE HISTORY — SIDE BY SIDE                     -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="divider">
+    <div class="divider-label">
+      <span>Running Price Log</span>
+      <small>all entries &middot; newest first</small>
     </div>
-
-    <div class="latest-card tlc" id="tlc-card">
-      <span class="live-badge"><span class="live-dot"></span>Live</span>
-      <div class="chip">NAND</div>
-      <div class="card-product">512Gb TLC</div>
-      <div class="card-date" id="tlc-date">Loading…</div>
-      <div class="card-avg"  id="tlc-avg">—</div>
-      <div class="card-change" id="tlc-change">—</div>
-      <div class="metrics">
-        <div><div class="metric-label">Weekly High</div><div class="metric-value" id="tlc-wh">—</div></div>
-        <div><div class="metric-label">Weekly Low</div> <div class="metric-value" id="tlc-wl">—</div></div>
-        <div><div class="metric-label">Session High</div><div class="metric-value" id="tlc-sh">—</div></div>
-        <div><div class="metric-label">Session Low</div> <div class="metric-value" id="tlc-sl">—</div></div>
-      </div>
-    </div>
-
-  </div><!-- /latest-grid -->
-
-  <!-- Price history -->
-  <div class="section-label">Price History</div>
-  <div class="history-grid">
-
-    <div class="history-panel ddr5">
-      <div class="panel-header">
-        <div class="chip">DRAM</div>
-        <h3>DDR5 16Gb (2Gx8) 4800/5600</h3>
-        <span class="entry-count" id="ddr5-count"></span>
-      </div>
-      <div class="table-scroll">
-        <table>
-          <thead><tr>
-            <th>Date</th>
-            <th>Wk High</th><th>Wk Low</th>
-            <th>Ss High</th><th>Ss Low</th>
-            <th>Avg</th><th>Change</th>
-          </tr></thead>
-          <tbody id="ddr5-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="history-panel tlc">
-      <div class="panel-header">
-        <div class="chip">NAND</div>
-        <h3>512Gb TLC</h3>
-        <span class="entry-count" id="tlc-count"></span>
-      </div>
-      <div class="table-scroll">
-        <table>
-          <thead><tr>
-            <th>Date</th>
-            <th>Wk High</th><th>Wk Low</th>
-            <th>Ss High</th><th>Ss Low</th>
-            <th>Avg</th><th>Change</th>
-          </tr></thead>
-          <tbody id="tlc-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-  </div><!-- /history-grid -->
-
-  <div class="footer">
-    All prices are spot market prices in USD &nbsp;·&nbsp;
-    Data sourced from <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
-    &nbsp;·&nbsp; DDR5 updates daily (weekdays) &nbsp;·&nbsp; TLC updates weekly
   </div>
 
-</div><!-- /wrap -->
+  <div class="hist-grid">
+    <div class="hist-section" id="ddr5-section"></div>
+    <div class="hist-section" id="tlc-section"></div>
+  </div>
+
+</main>
+
+<footer>
+  Prices in USD &middot; Source: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
+</footer>
 
 <script>
-  /* ── Helpers ────────────────────────────────────────────── */
-  function fmtDate(s) {
-    const parts = s.split('/');
-    if (parts.length !== 3) return s;
-    const dt = new Date(+parts[2], +parts[0] - 1, +parts[1]);
-    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
+(function () {
+  'use strict';
 
-  function dirOf(s) {
-    if (s && s.startsWith('+')) return 'up';
-    if (s && s.startsWith('-')) return 'down';
-    return 'flat';
-  }
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  function chgCls(s) {
-    if (s && s.startsWith('+')) return 'chg-up';
-    if (s && s.startsWith('-')) return 'chg-down';
-    return 'chg-flat';
-  }
-
-  function arrow(s) {
-    if (s && s.startsWith('+')) return ' ↑';
-    if (s && s.startsWith('-')) return ' ↓';
-    return '';
+  function formatDate(s) {
+    var p = String(s || '').split('/');
+    if (p.length !== 3) return s;
+    var m = parseInt(p[0], 10) - 1;
+    var d = parseInt(p[1], 10);
+    if (isNaN(m) || isNaN(d) || m < 0 || m > 11) return s;
+    return MONTHS[m] + ' ' + d + ', ' + p[2];
   }
 
   function esc(s) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  /* ── Render latest card ─────────────────────────────────── */
-  function renderCard(pfx, e) {
-    document.getElementById(pfx + '-date').textContent = 'As of ' + fmtDate(e.date);
-    document.getElementById(pfx + '-avg').textContent  = e.session_avg;
-    const chgEl = document.getElementById(pfx + '-change');
-    chgEl.className = 'card-change ' + dirOf(e.session_change);
-    chgEl.textContent = e.session_change + arrow(e.session_change) + ' session avg change';
-    document.getElementById(pfx + '-wh').textContent = e.weekly_high;
-    document.getElementById(pfx + '-wl').textContent = e.weekly_low;
-    document.getElementById(pfx + '-sh').textContent = e.session_high;
-    document.getElementById(pfx + '-sl').textContent = e.session_low;
+  function dir(v) {
+    var s = String(v || '');
+    var n = parseFloat(s.replace(/[^0-9.\-+]/g, ''));
+    if (isNaN(n)) return s.indexOf('+') > -1 ? 'up' : s.indexOf('-') > -1 ? 'down' : 'flat';
+    return n > 0 ? 'up' : n < 0 ? 'down' : 'flat';
   }
 
-  /* ── Render history table ───────────────────────────────── */
-  function renderTable(tbodyId, countId, entries) {
-    const reversed = [...entries].reverse();
-    const countEl = document.getElementById(countId);
-    if (countEl) countEl.textContent = entries.length + ' entries';
+  function arrow(d) {
+    return d === 'up' ? '&#9650;&thinsp;' : d === 'down' ? '&#9660;&thinsp;' : '';
+  }
 
-    const html = reversed.map((e, i) => {
-      const isNew = i === 0;
-      const dateTd = isNew
-        ? `<td>${esc(fmtDate(e.date))} <span class="new-badge">Latest</span></td>`
-        : `<td>${esc(fmtDate(e.date))}</td>`;
-      const cc = chgCls(e.session_change);
-      return `<tr class="${isNew ? 'newest' : ''}">
-        ${dateTd}
-        <td>${esc(e.weekly_high)}</td>
-        <td>${esc(e.weekly_low)}</td>
-        <td>${esc(e.session_high)}</td>
-        <td>${esc(e.session_low)}</td>
-        <td>${esc(e.session_avg)}</td>
-        <td class="${cc}">${esc(e.session_change)}</td>
-      </tr>`;
+  function latestCard(row, type, name, sub) {
+    if (!row) return '<div class="latest-card empty">No data yet.</div>';
+    var d = dir(row.session_change);
+    return '<div class="latest-card ' + type + '">'
+      + '<div class="card-top">'
+        + '<div class="card-title">'
+          + '<span class="chip chip-' + type + '">' + type.toUpperCase() + '</span>'
+          + '<div><div class="card-name">' + esc(name) + '</div>'
+          + '<div class="card-sub">' + esc(sub) + '</div></div>'
+        + '</div>'
+        + '<span class="card-date">' + esc(formatDate(row.date)) + '</span>'
+      + '</div>'
+      + '<div class="stats-grid">'
+        + mkStat('Weekly High',     row.weekly_high,    '')
+        + mkStat('Weekly Low',      row.weekly_low,     '')
+        + mkStat('Session High',    row.session_high,   '')
+        + mkStat('Session Low',     row.session_low,    '')
+        + mkStat('Session Average', row.session_avg,    '')
+        + mkStat('Avg Change',      row.session_change, d)
+      + '</div>'
+    + '</div>';
+  }
+
+  function mkStat(label, val, cls) {
+    var v = cls ? '<span class="' + cls + '">' + (cls !== '' ? arrow(cls) : '') + esc(val) + '</span>' : esc(val);
+    return '<div class="stat"><div class="stat-label">' + label + '</div><div class="stat-value">' + v + '</div></div>';
+  }
+
+  function histTable(rows) {
+    if (!rows || !rows.length) return '<p class="empty-msg">No history yet.</p>';
+    var rev = rows.slice().reverse();
+    var trs = rev.map(function (r, i) {
+      var d = dir(r.session_change);
+      var isNew = i === 0;
+      var dateCell = esc(formatDate(r.date)) + (isNew ? '<span class="new-tag">latest</span>' : '');
+      return '<tr' + (isNew ? ' class="row-newest"' : '') + '>'
+        + '<td>' + dateCell + '</td>'
+        + '<td>' + esc(r.weekly_high)  + '</td>'
+        + '<td>' + esc(r.weekly_low)   + '</td>'
+        + '<td>' + esc(r.session_high) + '</td>'
+        + '<td>' + esc(r.session_low)  + '</td>'
+        + '<td>' + esc(r.session_avg)  + '</td>'
+        + '<td class="chg ' + d + '">' + arrow(d) + esc(r.session_change) + '</td>'
+      + '</tr>';
     }).join('');
-    document.getElementById(tbodyId).innerHTML = html;
+    return '<div class="table-wrap"><table>'
+      + '<thead><tr>'
+      + '<th>Date</th>'
+      + '<th>Wk High</th>'
+      + '<th>Wk Low</th>'
+      + '<th>Sess High</th>'
+      + '<th>Sess Low</th>'
+      + '<th>Sess Avg</th>'
+      + '<th>Chg %</th>'
+      + '</tr></thead>'
+      + '<tbody>' + trs + '</tbody>'
+      + '</table></div>';
   }
 
-  /* ── Load data ──────────────────────────────────────────── */
+  function histSection(el, rows, type, name, sub) {
+    var count = rows ? rows.length : 0;
+    el.innerHTML =
+      '<div class="hist-header">'
+        + '<span class="chip chip-' + type + '">' + type.toUpperCase() + '</span>'
+        + '<h3>' + esc(name) + '</h3>'
+        + '<span class="sub">' + esc(sub) + '</span>'
+        + '<span class="count">' + count + ' entries</span>'
+      + '</div>'
+      + histTable(rows);
+  }
+
+  function render(data) {
+    var ld = data.ddr5[data.ddr5.length - 1] || null;
+    var lt = data.tlc[data.tlc.length  - 1] || null;
+
+    document.getElementById('hdr-date').textContent =
+      'Last updated: ' + (ld ? formatDate(ld.date) : '—');
+
+    document.getElementById('latest-date-label').innerHTML =
+      ld ? 'DDR5 as of <strong>' + esc(formatDate(ld.date)) + '</strong>'
+           + (lt ? '&nbsp;&nbsp;·&nbsp;&nbsp;TLC as of <strong>' + esc(formatDate(lt.date)) + '</strong>' : '')
+         : '';
+
+    document.getElementById('latest-grid').innerHTML =
+      latestCard(ld, 'dram', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz') +
+      latestCard(lt, 'nand', '512Gb TLC', 'NAND Flash Wafer');
+
+    histSection(document.getElementById('ddr5-section'),
+      data.ddr5, 'dram', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz');
+
+    histSection(document.getElementById('tlc-section'),
+      data.tlc, 'nand', '512Gb TLC', 'NAND Flash Wafer');
+  }
+
   fetch('history.json?_=' + Date.now())
-    .then(r => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(data => {
-      if (data.ddr5 && data.ddr5.length > 0) {
-        renderCard('ddr5', data.ddr5[data.ddr5.length - 1]);
-        renderTable('ddr5-tbody', 'ddr5-count', data.ddr5);
-      }
-      if (data.tlc && data.tlc.length > 0) {
-        renderCard('tlc', data.tlc[data.tlc.length - 1]);
-        renderTable('tlc-tbody', 'tlc-count', data.tlc);
-      }
-    })
-    .catch(err => {
-      console.error('Failed to load history.json:', err);
-      ['ddr5-date','tlc-date'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = 'Error loading data';
-      });
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(render)
+    .catch(function (err) {
+      document.getElementById('latest-grid').innerHTML =
+        '<div class="latest-card empty">Failed to load data: ' + esc(err.message) + '</div>';
     });
+})();
 </script>
 </body>
 </html>
