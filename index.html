@@ -6,101 +6,192 @@
   <title>DRAM &amp; NAND Flash Spot Prices</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0e1a; color: #e2e8f0; min-height: 100vh; }
 
     /* ── Header ── */
-    header { background: #0d1117; border-bottom: 1px solid #21262d; padding: 1.2rem 2rem; text-align: center; }
-    header h1 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: .35rem; }
-    .header-meta { font-size: .78rem; color: #64748b; display: flex; justify-content: center; align-items: center; gap: .85rem; flex-wrap: wrap; }
+    header {
+      background: linear-gradient(180deg, #0d1117 0%, #0a0e1a 100%);
+      border-bottom: 1px solid #1e293b;
+      padding: 1.1rem 2rem;
+      text-align: center;
+    }
+    header h1 { font-size: 1.4rem; font-weight: 700; color: #f8fafc; margin-bottom: .3rem; }
+    .header-meta {
+      font-size: .75rem; color: #64748b;
+      display: flex; justify-content: center; align-items: center; gap: .75rem; flex-wrap: wrap;
+    }
     .header-meta a { color: #60a5fa; text-decoration: none; }
     .header-meta a:hover { text-decoration: underline; }
-    .dot { color: #334155; }
+    .dot { color: #1e293b; }
 
-    /* ── Layout — wider for side-by-side tables ── */
-    main { max-width: 1500px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
+    /* ── Main layout ── */
+    main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
 
-    /* ── Section dividers ── */
-    .divider { display: flex; align-items: center; gap: .75rem; margin: 1.75rem 0 1.1rem; }
-    .divider-label { display: flex; align-items: baseline; gap: .6rem; white-space: nowrap; }
-    .divider-label span { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.6px; color: #475569; }
-    .divider-label small { font-size: .68rem; color: #334155; font-weight: 500; letter-spacing: .4px; }
-    .divider::after { content: ''; flex: 1; height: 1px; background: #1e293b; }
+    /* ════════════════════════════════════════
+       TODAY'S UPDATE — full-width top block
+    ════════════════════════════════════════ */
+    .today-block {
+      background: linear-gradient(135deg, #0c1629 0%, #0d1117 60%, #071020 100%);
+      border: 1px solid #1e3a6e;
+      border-radius: 16px;
+      padding: 1.4rem 1.75rem 1.6rem;
+      margin-bottom: 2.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .today-block::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, #1d4ed8, #0ea5e9, #1d4ed8);
+    }
 
-    /* ── Latest UPDATE section ── */
-    .latest-section { background: linear-gradient(135deg, #0d1626 0%, #0d1117 100%); border: 1px solid #1e3050; border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; }
-    .latest-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1rem; flex-wrap: wrap; gap: .5rem; }
-    .latest-badge { display: inline-flex; align-items: center; gap: .45rem; background: #1d3461; border: 1px solid #2d5a9e; border-radius: 8px; padding: .3rem .8rem; }
-    .latest-badge .dot-live { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
-    .latest-badge span { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #93c5fd; }
-    .latest-date-label { font-size: .78rem; color: #64748b; }
-    .latest-date-label strong { color: #94a3b8; }
+    .today-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.25rem; flex-wrap: wrap; gap: .6rem;
+    }
+    .today-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(29, 78, 216, 0.18); border: 1px solid #2563eb;
+      border-radius: 8px; padding: .28rem .85rem;
+    }
+    .pulse {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #3b82f6; box-shadow: 0 0 8px #3b82f6;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 4px #3b82f6; }
+      50%       { box-shadow: 0 0 12px #60a5fa; }
+    }
+    .today-badge span { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; color: #93c5fd; }
+    .today-date-row { font-size: .78rem; color: #64748b; }
+    .today-date-row strong { color: #94a3b8; font-weight: 600; }
 
-    .latest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .latest-card { border-radius: 12px; padding: 1.1rem 1.4rem; border: 1px solid; }
-    .latest-card.dram { background: #0d1f3c; border-color: #1e40af; }
-    .latest-card.nand { background: #052e16; border-color: #166534; }
-    .latest-card.empty { background: #1e293b; border-color: #334155; color: #475569; display: flex; align-items: center; justify-content: center; min-height: 6rem; font-size: .9rem; grid-column: 1/-1; }
+    .today-cards {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem;
+    }
+    .today-card {
+      border-radius: 12px; padding: 1.1rem 1.3rem; border: 1px solid;
+    }
+    .today-card.dram { background: rgba(13, 31, 60, 0.7); border-color: #1e40af; }
+    .today-card.nand { background: rgba(5, 46, 22, 0.7); border-color: #166534; }
+    .today-card.empty {
+      background: #111827; border-color: #1e293b; color: #475569;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 5rem; font-size: .88rem; grid-column: 1/-1;
+    }
 
-    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .9rem; gap: .5rem; flex-wrap: wrap; }
-    .card-title { display: flex; align-items: center; gap: .6rem; }
-    .card-name { font-size: .92rem; font-weight: 600; color: #f1f5f9; }
-    .card-sub  { font-size: .7rem; color: #64748b; margin-top: .1rem; }
-    .card-date { font-size: .72rem; color: #94a3b8; background: rgba(0,0,0,.3); padding: .18rem .6rem; border-radius: 999px; border: 1px solid #334155; white-space: nowrap; }
-
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
-    .stat { background: rgba(0,0,0,.3); border-radius: 8px; padding: .5rem .75rem; }
-    .stat-label { font-size: .58rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; margin-bottom: .2rem; }
-    .stat-value { font-size: .95rem; font-weight: 600; color: #e2e8f0; font-variant-numeric: tabular-nums; }
-
-    /* ── Chips ── */
-    .chip { padding: .2rem .6rem; border-radius: 6px; font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .85rem; gap: .5rem; flex-wrap: wrap; }
+    .card-name-block { display: flex; align-items: center; gap: .55rem; }
+    .chip { padding: .18rem .55rem; border-radius: 6px; font-size: .63rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
     .chip-dram { background: #1d4ed8; color: #bfdbfe; }
     .chip-nand { background: #065f46; color: #a7f3d0; }
+    .card-title { font-size: .9rem; font-weight: 600; color: #f1f5f9; }
+    .card-sub   { font-size: .68rem; color: #64748b; margin-top: .1rem; }
+    .card-date-pill {
+      font-size: .7rem; color: #94a3b8;
+      background: rgba(0,0,0,.4); padding: .16rem .55rem;
+      border-radius: 999px; border: 1px solid #1e293b; white-space: nowrap;
+    }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem; }
+    .stat-box { background: rgba(0,0,0,.35); border-radius: 8px; padding: .45rem .7rem; }
+    .stat-label { font-size: .56rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; margin-bottom: .15rem; }
+    .stat-value { font-size: .92rem; font-weight: 600; color: #e2e8f0; font-variant-numeric: tabular-nums; }
 
     /* ── Colors ── */
     .up   { color: #4ade80; }
     .down { color: #f87171; }
     .flat { color: #94a3b8; }
 
-    /* ── History grid — side by side ── */
-    .hist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
-    .hist-section { min-width: 0; }
-    .hist-header { display: flex; align-items: center; gap: .65rem; margin-bottom: .75rem; flex-wrap: wrap; }
-    .hist-header h3 { font-size: .95rem; font-weight: 600; color: #f1f5f9; }
-    .hist-header .sub { font-size: .72rem; color: #64748b; }
-    .hist-header .count { font-size: .67rem; color: #334155; background: #1e293b; border: 1px solid #334155; border-radius: 999px; padding: .08rem .5rem; }
+    /* ════════════════════════════════════════
+       SECTION DIVIDER
+    ════════════════════════════════════════ */
+    .section-divider {
+      display: flex; align-items: center; gap: .75rem;
+      margin: 0 0 1.1rem;
+    }
+    .section-divider-label {
+      display: flex; align-items: baseline; gap: .55rem; white-space: nowrap;
+    }
+    .section-divider-label span {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.6px; color: #334155;
+    }
+    .section-divider-label small { font-size: .65rem; color: #1e293b; }
+    .section-divider::after { content: ''; flex: 1; height: 1px; background: #1e293b; }
 
-    /* ── Tables — compact rows ── */
-    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }
-    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-    thead tr { background: #1e3a5f; }
-    thead th { padding: .55rem .75rem; text-align: right; font-weight: 600; font-size: .67rem; text-transform: uppercase; letter-spacing: .4px; color: #93c5fd; white-space: nowrap; border-bottom: 2px solid #334155; }
+    /* ════════════════════════════════════════
+       RUNNING LOG — below the today block
+    ════════════════════════════════════════ */
+    .log-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1.5rem; align-items: start;
+    }
+    .log-col { min-width: 0; }
+    .log-col-header {
+      display: flex; align-items: center; gap: .6rem;
+      margin-bottom: .7rem; flex-wrap: wrap;
+    }
+    .log-col-header h3 { font-size: .9rem; font-weight: 600; color: #f1f5f9; }
+    .log-col-header .sub { font-size: .7rem; color: #64748b; }
+    .count-badge {
+      font-size: .63rem; color: #334155;
+      background: #111827; border: 1px solid #1e293b;
+      border-radius: 999px; padding: .06rem .45rem;
+    }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #1e293b; }
+    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    thead tr { background: #0f1e38; }
+    thead th {
+      padding: .5rem .7rem; text-align: right;
+      font-weight: 600; font-size: .63rem; text-transform: uppercase;
+      letter-spacing: .4px; color: #60a5fa; white-space: nowrap;
+      border-bottom: 1px solid #1e293b;
+    }
     thead th:first-child { text-align: left; }
-    tbody tr:nth-child(odd)  { background: #141b2d; }
-    tbody tr:nth-child(even) { background: #1a2438; }
-    tbody tr:hover           { background: #1e3050; }
-    tbody tr:last-child td   { border-bottom: none; }
-    tbody td { padding: .38rem .75rem; text-align: right; border-bottom: 1px solid #1e293b; font-variant-numeric: tabular-nums; color: #cbd5e1; white-space: nowrap; }
-    tbody td:first-child { text-align: left; color: #94a3b8; font-size: .78rem; }
+    tbody tr:nth-child(odd)  { background: #0d1117; }
+    tbody tr:nth-child(even) { background: #111827; }
+    tbody tr:hover { background: #162032; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody td {
+      padding: .35rem .7rem; text-align: right;
+      border-bottom: 1px solid #0f172a;
+      font-variant-numeric: tabular-nums; color: #94a3b8; white-space: nowrap;
+    }
+    tbody td:first-child { text-align: left; color: #64748b; font-size: .76rem; }
 
-    /* Highlight newest row */
-    tbody tr.row-newest td { background: #182844; color: #f1f5f9; font-weight: 600; }
-    tbody tr.row-newest td:first-child { color: #f1f5f9; }
+    /* newest row highlight */
+    tbody tr.row-new td { background: #0f1f40 !important; color: #cbd5e1; font-weight: 600; }
+    tbody tr.row-new td:first-child { color: #93c5fd; }
 
     .chg { font-weight: 700; }
-    .new-tag { display: inline-block; background: #1d4ed8; color: #bfdbfe; font-size: .55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: .08rem .35rem; border-radius: 4px; margin-left: .35rem; vertical-align: middle; }
-    .empty-msg { color: #475569; font-size: .85rem; padding: 1.5rem; text-align: center; }
+    .new-tag {
+      display: inline-block; background: #1d4ed8; color: #bfdbfe;
+      font-size: .52rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .4px; padding: .06rem .32rem; border-radius: 3px;
+      margin-left: .3rem; vertical-align: middle;
+    }
+    .empty-msg { color: #334155; font-size: .82rem; padding: 1.5rem; text-align: center; }
 
     /* ── Footer ── */
-    footer { text-align: center; font-size: .72rem; color: #475569; padding: 1.5rem 0 2rem; border-top: 1px solid #1e293b; }
-    footer a { color: #60a5fa; text-decoration: none; }
+    footer {
+      text-align: center; font-size: .7rem; color: #334155;
+      padding: 1.25rem 0 2rem; border-top: 1px solid #0f172a;
+    }
+    footer a { color: #475569; text-decoration: none; }
+    footer a:hover { color: #60a5fa; }
 
+    /* ── Responsive ── */
     @media (max-width: 900px) {
-      .hist-grid { grid-template-columns: 1fr; }
+      .log-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
-      .latest-grid { grid-template-columns: 1fr; }
-      .stats-grid  { grid-template-columns: repeat(2, 1fr); }
+      .today-cards { grid-template-columns: 1fr; }
+      .stats-row   { grid-template-columns: repeat(2, 1fr); }
+      main { padding: 1rem .85rem 3rem; }
     }
   </style>
 </head>
@@ -109,7 +200,7 @@
 <header>
   <h1>DRAM &amp; NAND Flash Spot Prices</h1>
   <div class="header-meta">
-    <span id="hdr-date">Loading…</span>
+    <span id="hdr-updated">Loading…</span>
     <span class="dot">&middot;</span>
     <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
     <span class="dot">&middot;</span>
@@ -119,41 +210,42 @@
 
 <main>
 
-  <!-- ═══════════════════════════════════════════════════ -->
-  <!--   LATEST UPDATE — TOP                              -->
-  <!-- ═══════════════════════════════════════════════════ -->
-  <div class="latest-section">
-    <div class="latest-section-header">
-      <div class="latest-badge">
-        <div class="dot-live"></div>
+  <!-- ════════════════════════════════════════════
+       TODAY'S UPDATE — always at the very top
+  ════════════════════════════════════════════ -->
+  <div class="today-block">
+    <div class="today-header">
+      <div class="today-badge">
+        <div class="pulse"></div>
         <span>Latest Update</span>
       </div>
-      <div class="latest-date-label" id="latest-date-label"></div>
+      <div class="today-date-row" id="today-date-row"></div>
     </div>
-    <div class="latest-grid" id="latest-grid">
-      <div class="latest-card empty">Loading data…</div>
+    <div class="today-cards" id="today-cards">
+      <div class="today-card empty">Loading…</div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════ -->
-  <!--   PRICE HISTORY — SIDE BY SIDE                     -->
-  <!-- ═══════════════════════════════════════════════════ -->
-  <div class="divider">
-    <div class="divider-label">
+  <!-- ════════════════════════════════════════════
+       RUNNING PRICE LOG — full history below
+  ════════════════════════════════════════════ -->
+  <div class="section-divider">
+    <div class="section-divider-label">
       <span>Running Price Log</span>
       <small>all entries &middot; newest first</small>
     </div>
   </div>
 
-  <div class="hist-grid">
-    <div class="hist-section" id="ddr5-section"></div>
-    <div class="hist-section" id="tlc-section"></div>
+  <div class="log-grid">
+    <div class="log-col" id="ddr5-col"></div>
+    <div class="log-col" id="tlc-col"></div>
   </div>
 
 </main>
 
 <footer>
-  Prices in USD &middot; Source: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
+  Prices in USD &middot; Source:
+  <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
 </footer>
 
 <script>
@@ -162,25 +254,22 @@
 
   var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  function formatDate(s) {
+  function fmtDate(s) {
     var p = String(s || '').split('/');
     if (p.length !== 3) return s;
-    var m = parseInt(p[0], 10) - 1;
-    var d = parseInt(p[1], 10);
+    var m = parseInt(p[0], 10) - 1, d = parseInt(p[1], 10);
     if (isNaN(m) || isNaN(d) || m < 0 || m > 11) return s;
     return MONTHS[m] + ' ' + d + ', ' + p[2];
   }
 
   function esc(s) {
     return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function dir(v) {
-    var s = String(v || '');
-    var n = parseFloat(s.replace(/[^0-9.\-+]/g, ''));
-    if (isNaN(n)) return s.indexOf('+') > -1 ? 'up' : s.indexOf('-') > -1 ? 'down' : 'flat';
+    var n = parseFloat(String(v || '').replace(/[^0-9.\-+]/g, ''));
+    if (isNaN(n)) { var s = String(v||''); return s.indexOf('+')>-1?'up':s.indexOf('-')>-1?'down':'flat'; }
     return n > 0 ? 'up' : n < 0 ? 'down' : 'flat';
   }
 
@@ -188,42 +277,50 @@
     return d === 'up' ? '&#9650;&thinsp;' : d === 'down' ? '&#9660;&thinsp;' : '';
   }
 
-  function latestCard(row, type, name, sub) {
-    if (!row) return '<div class="latest-card empty">No data yet.</div>';
+  function stat(label, val, cls) {
+    var inner = cls
+      ? '<span class="' + cls + '">' + arrow(cls) + esc(val) + '</span>'
+      : esc(val);
+    return '<div class="stat-box">'
+      + '<div class="stat-label">' + label + '</div>'
+      + '<div class="stat-value">' + inner + '</div>'
+      + '</div>';
+  }
+
+  function buildCard(row, type, name, sub) {
+    if (!row) return '<div class="today-card empty">No data yet.</div>';
     var d = dir(row.session_change);
-    return '<div class="latest-card ' + type + '">'
-      + '<div class="card-top">'
-        + '<div class="card-title">'
+    return '<div class="today-card ' + type + '">'
+      + '<div class="card-head">'
+        + '<div class="card-name-block">'
           + '<span class="chip chip-' + type + '">' + type.toUpperCase() + '</span>'
-          + '<div><div class="card-name">' + esc(name) + '</div>'
-          + '<div class="card-sub">' + esc(sub) + '</div></div>'
+          + '<div>'
+            + '<div class="card-title">' + esc(name) + '</div>'
+            + '<div class="card-sub">'  + esc(sub)  + '</div>'
+          + '</div>'
         + '</div>'
-        + '<span class="card-date">' + esc(formatDate(row.date)) + '</span>'
+        + '<span class="card-date-pill">' + esc(fmtDate(row.date)) + '</span>'
       + '</div>'
-      + '<div class="stats-grid">'
-        + mkStat('Weekly High',     row.weekly_high,    '')
-        + mkStat('Weekly Low',      row.weekly_low,     '')
-        + mkStat('Session High',    row.session_high,   '')
-        + mkStat('Session Low',     row.session_low,    '')
-        + mkStat('Session Average', row.session_avg,    '')
-        + mkStat('Avg Change',      row.session_change, d)
+      + '<div class="stats-row">'
+        + stat('Weekly High',     row.weekly_high,    '')
+        + stat('Weekly Low',      row.weekly_low,     '')
+        + stat('Session High',    row.session_high,   '')
+        + stat('Session Low',     row.session_low,    '')
+        + stat('Session Average', row.session_avg,    '')
+        + stat('Avg Change',      row.session_change, d)
       + '</div>'
     + '</div>';
   }
 
-  function mkStat(label, val, cls) {
-    var v = cls ? '<span class="' + cls + '">' + (cls !== '' ? arrow(cls) : '') + esc(val) + '</span>' : esc(val);
-    return '<div class="stat"><div class="stat-label">' + label + '</div><div class="stat-value">' + v + '</div></div>';
-  }
-
-  function histTable(rows) {
+  function buildTable(rows) {
     if (!rows || !rows.length) return '<p class="empty-msg">No history yet.</p>';
     var rev = rows.slice().reverse();
     var trs = rev.map(function (r, i) {
       var d = dir(r.session_change);
       var isNew = i === 0;
-      var dateCell = esc(formatDate(r.date)) + (isNew ? '<span class="new-tag">latest</span>' : '');
-      return '<tr' + (isNew ? ' class="row-newest"' : '') + '>'
+      var dateCell = esc(fmtDate(r.date))
+        + (isNew ? '<span class="new-tag">latest</span>' : '');
+      return '<tr' + (isNew ? ' class="row-new"' : '') + '>'
         + '<td>' + dateCell + '</td>'
         + '<td>' + esc(r.weekly_high)  + '</td>'
         + '<td>' + esc(r.weekly_low)   + '</td>'
@@ -236,49 +333,48 @@
     return '<div class="table-wrap"><table>'
       + '<thead><tr>'
       + '<th>Date</th>'
-      + '<th>Wk High</th>'
-      + '<th>Wk Low</th>'
-      + '<th>Sess High</th>'
-      + '<th>Sess Low</th>'
-      + '<th>Sess Avg</th>'
-      + '<th>Chg %</th>'
+      + '<th>Wk High</th><th>Wk Low</th>'
+      + '<th>Sess High</th><th>Sess Low</th>'
+      + '<th>Sess Avg</th><th>Chg %</th>'
       + '</tr></thead>'
       + '<tbody>' + trs + '</tbody>'
       + '</table></div>';
   }
 
-  function histSection(el, rows, type, name, sub) {
-    var count = rows ? rows.length : 0;
+  function buildCol(el, rows, type, name, sub) {
     el.innerHTML =
-      '<div class="hist-header">'
+      '<div class="log-col-header">'
         + '<span class="chip chip-' + type + '">' + type.toUpperCase() + '</span>'
         + '<h3>' + esc(name) + '</h3>'
         + '<span class="sub">' + esc(sub) + '</span>'
-        + '<span class="count">' + count + ' entries</span>'
+        + '<span class="count-badge">' + (rows ? rows.length : 0) + ' entries</span>'
       + '</div>'
-      + histTable(rows);
+      + buildTable(rows);
   }
 
   function render(data) {
-    var ld = data.ddr5[data.ddr5.length - 1] || null;
-    var lt = data.tlc[data.tlc.length  - 1] || null;
+    var latestDDR5 = data.ddr5[data.ddr5.length - 1] || null;
+    var latestTLC  = data.tlc[data.tlc.length  - 1] || null;
 
-    document.getElementById('hdr-date').textContent =
-      'Last updated: ' + (ld ? formatDate(ld.date) : '—');
+    /* header */
+    document.getElementById('hdr-updated').textContent =
+      'Last updated: ' + (latestDDR5 ? fmtDate(latestDDR5.date) : '—');
 
-    document.getElementById('latest-date-label').innerHTML =
-      ld ? 'DDR5 as of <strong>' + esc(formatDate(ld.date)) + '</strong>'
-           + (lt ? '&nbsp;&nbsp;·&nbsp;&nbsp;TLC as of <strong>' + esc(formatDate(lt.date)) + '</strong>' : '')
-         : '';
+    /* today date row */
+    var parts = [];
+    if (latestDDR5) parts.push('DDR5 as of <strong>' + esc(fmtDate(latestDDR5.date)) + '</strong>');
+    if (latestTLC)  parts.push('TLC as of <strong>'  + esc(fmtDate(latestTLC.date))  + '</strong>');
+    document.getElementById('today-date-row').innerHTML = parts.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
 
-    document.getElementById('latest-grid').innerHTML =
-      latestCard(ld, 'dram', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz') +
-      latestCard(lt, 'nand', '512Gb TLC', 'NAND Flash Wafer');
+    /* latest cards */
+    document.getElementById('today-cards').innerHTML =
+      buildCard(latestDDR5, 'dram', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz') +
+      buildCard(latestTLC,  'nand', '512Gb TLC', 'NAND Flash Wafer');
 
-    histSection(document.getElementById('ddr5-section'),
+    /* running log */
+    buildCol(document.getElementById('ddr5-col'),
       data.ddr5, 'dram', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz');
-
-    histSection(document.getElementById('tlc-section'),
+    buildCol(document.getElementById('tlc-col'),
       data.tlc, 'nand', '512Gb TLC', 'NAND Flash Wafer');
   }
 
@@ -286,8 +382,8 @@
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(render)
     .catch(function (err) {
-      document.getElementById('latest-grid').innerHTML =
-        '<div class="latest-card empty">Failed to load data: ' + esc(err.message) + '</div>';
+      document.getElementById('today-cards').innerHTML =
+        '<div class="today-card empty">Failed to load data: ' + esc(err.message) + '</div>';
     });
 })();
 </script>
