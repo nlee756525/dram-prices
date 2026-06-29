@@ -6,6 +6,12 @@ on:
     - cron: '30 12 * * 1-5'  # 8:30 AM ET (12:30 UTC) — backup if primary delayed
     - cron: '30 14 * * 1-5'  # 10:30 AM ET (14:30 UTC) — second backup
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'history.json'
+      - 'scrape-last-run.log'
+      - '**.md'
 
 permissions:
   contents: write
