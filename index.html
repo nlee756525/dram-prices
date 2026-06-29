@@ -10,144 +10,125 @@
 
     /* ── Header ── */
     header {
-      background: linear-gradient(180deg, #0d1117 0%, #0a0e1a 100%);
+      background: #0d1117;
       border-bottom: 1px solid #1e293b;
-      padding: 1.1rem 2rem;
-      text-align: center;
+      padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
     }
-    header h1 { font-size: 1.4rem; font-weight: 700; color: #f8fafc; margin-bottom: .3rem; }
-    .header-meta {
-      font-size: .75rem; color: #64748b;
-      display: flex; justify-content: center; align-items: center; gap: .75rem; flex-wrap: wrap;
-    }
-    .header-meta a { color: #60a5fa; text-decoration: none; }
-    .header-meta a:hover { text-decoration: underline; }
-    .dot { color: #1e293b; }
+    header h1 { font-size: 1.15rem; font-weight: 700; color: #f8fafc; }
+    .hdr-right { font-size: .74rem; color: #475569; display: flex; gap: .85rem; align-items: center; flex-wrap: wrap; }
+    .hdr-right a { color: #60a5fa; text-decoration: none; }
+    .hdr-right a:hover { text-decoration: underline; }
+    #hdr-updated { color: #64748b; }
 
-    /* ── Main layout ── */
-    main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+    /* ── Main ── */
+    main { max-width: 1400px; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
 
     /* ════════════════════════════════════════
-       TODAY'S UPDATE — full-width top block
+       LATEST UPDATE — top of page
     ════════════════════════════════════════ */
-    .today-block {
-      background: linear-gradient(135deg, #0c1629 0%, #0d1117 60%, #071020 100%);
-      border: 1px solid #1e3a6e;
-      border-radius: 16px;
-      padding: 1.4rem 1.75rem 1.6rem;
-      margin-bottom: 2.25rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .today-block::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, #1d4ed8, #0ea5e9, #1d4ed8);
+    .latest-section {
+      margin-bottom: 2.5rem;
     }
 
-    .today-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1.25rem; flex-wrap: wrap; gap: .6rem;
+    .latest-heading {
+      display: flex; align-items: center; gap: .65rem; margin-bottom: 1rem; flex-wrap: wrap;
     }
-    .today-badge {
-      display: inline-flex; align-items: center; gap: .5rem;
-      background: rgba(29, 78, 216, 0.18); border: 1px solid #2563eb;
-      border-radius: 8px; padding: .28rem .85rem;
-    }
-    .pulse {
-      width: 8px; height: 8px; border-radius: 50%;
+    .pulse-dot {
+      width: 9px; height: 9px; border-radius: 50%;
       background: #3b82f6; box-shadow: 0 0 8px #3b82f6;
-      animation: pulse 2s infinite;
+      animation: pulse 2s ease-in-out infinite; flex-shrink: 0;
     }
     @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 4px #3b82f6; }
-      50%       { box-shadow: 0 0 12px #60a5fa; }
+      0%, 100% { box-shadow: 0 0 4px #3b82f6; opacity: 1; }
+      50%       { box-shadow: 0 0 14px #60a5fa; opacity: .85; }
     }
-    .today-badge span { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; color: #93c5fd; }
-    .today-date-row { font-size: .78rem; color: #64748b; }
-    .today-date-row strong { color: #94a3b8; font-weight: 600; }
+    .latest-heading h2 {
+      font-size: 1rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; color: #93c5fd;
+    }
+    .latest-date-pill {
+      font-size: .8rem; font-weight: 600; color: #e2e8f0;
+      background: rgba(30, 58, 138, 0.35); border: 1px solid #2563eb;
+      padding: .22rem .75rem; border-radius: 999px;
+    }
+    .latest-sub-dates {
+      margin-left: auto; font-size: .7rem; color: #475569;
+    }
+    .latest-sub-dates strong { color: #64748b; font-weight: 600; }
 
-    .today-cards {
+    .latest-cards {
       display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem;
     }
-    .today-card {
-      border-radius: 12px; padding: 1.1rem 1.3rem; border: 1px solid;
+
+    .price-card {
+      border-radius: 14px; padding: 1.25rem 1.4rem; border: 1px solid; position: relative; overflow: hidden;
     }
-    .today-card.dram { background: rgba(13, 31, 60, 0.7); border-color: #1e40af; }
-    .today-card.nand { background: rgba(5, 46, 22, 0.7); border-color: #166534; }
-    .today-card.empty {
-      background: #111827; border-color: #1e293b; color: #475569;
+    .price-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .price-card.dram { background: rgba(13, 28, 58, 0.8); border-color: #1e3a8a; }
+    .price-card.dram::before { background: linear-gradient(90deg, #1d4ed8, #3b82f6); }
+    .price-card.nand { background: rgba(5, 40, 22, 0.8); border-color: #14532d; }
+    .price-card.nand::before { background: linear-gradient(90deg, #15803d, #22c55e); }
+    .price-card.empty {
+      background: #111827; border-color: #1e293b; color: #334155;
       display: flex; align-items: center; justify-content: center;
-      min-height: 5rem; font-size: .88rem; grid-column: 1/-1;
+      min-height: 6rem; font-size: .88rem; grid-column: 1 / -1;
     }
 
-    .card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .85rem; gap: .5rem; flex-wrap: wrap; }
-    .card-name-block { display: flex; align-items: center; gap: .55rem; }
-    .chip { padding: .18rem .55rem; border-radius: 6px; font-size: .63rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; gap: .5rem; }
+    .card-identity { display: flex; align-items: center; gap: .55rem; }
+    .chip { display: inline-block; padding: .2rem .55rem; border-radius: 6px; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
     .chip-dram { background: #1d4ed8; color: #bfdbfe; }
-    .chip-nand { background: #065f46; color: #a7f3d0; }
-    .card-title { font-size: .9rem; font-weight: 600; color: #f1f5f9; }
-    .card-sub   { font-size: .68rem; color: #64748b; margin-top: .1rem; }
-    .card-date-pill {
-      font-size: .7rem; color: #94a3b8;
-      background: rgba(0,0,0,.4); padding: .16rem .55rem;
-      border-radius: 999px; border: 1px solid #1e293b; white-space: nowrap;
-    }
+    .chip-nand { background: #166534; color: #a7f3d0; }
+    .card-name { font-size: .92rem; font-weight: 600; color: #f1f5f9; }
+    .card-spec { font-size: .68rem; color: #64748b; margin-top: .1rem; }
+    .card-entry-date { font-size: .72rem; color: #475569; white-space: nowrap; margin-top: .15rem; }
 
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem; }
-    .stat-box { background: rgba(0,0,0,.35); border-radius: 8px; padding: .45rem .7rem; }
-    .stat-label { font-size: .56rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; margin-bottom: .15rem; }
-    .stat-value { font-size: .92rem; font-weight: 600; color: #e2e8f0; font-variant-numeric: tabular-nums; }
+    .fields-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+    .field { background: rgba(0,0,0,.3); border-radius: 8px; padding: .5rem .7rem; }
+    .field-label { font-size: .56rem; text-transform: uppercase; letter-spacing: .5px; color: #475569; margin-bottom: .2rem; }
+    .field-value { font-size: .94rem; font-weight: 600; color: #e2e8f0; font-variant-numeric: tabular-nums; }
 
-    /* ── Colors ── */
     .up   { color: #4ade80; }
     .down { color: #f87171; }
-    .flat { color: #94a3b8; }
+    .flat { color: #64748b; }
 
     /* ════════════════════════════════════════
-       SECTION DIVIDER
+       HISTORY — running list below
     ════════════════════════════════════════ */
-    .section-divider {
-      display: flex; align-items: center; gap: .75rem;
-      margin: 0 0 1.1rem;
-    }
-    .section-divider-label {
-      display: flex; align-items: baseline; gap: .55rem; white-space: nowrap;
-    }
-    .section-divider-label span {
-      font-size: .68rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1.6px; color: #334155;
-    }
-    .section-divider-label small { font-size: .65rem; color: #1e293b; }
-    .section-divider::after { content: ''; flex: 1; height: 1px; background: #1e293b; }
+    .history-section { }
 
-    /* ════════════════════════════════════════
-       RUNNING LOG — below the today block
-    ════════════════════════════════════════ */
-    .log-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 1.5rem; align-items: start;
+    .history-heading {
+      display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap;
     }
-    .log-col { min-width: 0; }
-    .log-col-header {
-      display: flex; align-items: center; gap: .6rem;
-      margin-bottom: .7rem; flex-wrap: wrap;
+    .history-heading h2 {
+      font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.8px; color: #334155;
     }
-    .log-col-header h3 { font-size: .9rem; font-weight: 600; color: #f1f5f9; }
-    .log-col-header .sub { font-size: .7rem; color: #64748b; }
-    .count-badge {
-      font-size: .63rem; color: #334155;
-      background: #111827; border: 1px solid #1e293b;
-      border-radius: 999px; padding: .06rem .45rem;
+    .history-heading::after { content: ''; flex: 1; height: 1px; background: #1e293b; }
+
+    .history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+    .history-col { min-width: 0; }
+
+    .col-label {
+      display: flex; align-items: center; gap: .55rem; margin-bottom: .65rem; flex-wrap: wrap;
+    }
+    .col-label h3 { font-size: .88rem; font-weight: 600; color: #cbd5e1; }
+    .col-label .col-sub { font-size: .68rem; color: #475569; }
+    .entry-count {
+      font-size: .62rem; color: #334155; background: #0f172a;
+      border: 1px solid #1e293b; border-radius: 999px; padding: .05rem .42rem;
     }
 
-    /* ── Tables ── */
-    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #1e293b; }
+    /* tables */
+    .tbl-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #1e293b; }
     table { width: 100%; border-collapse: collapse; font-size: .8rem; }
     thead tr { background: #0f1e38; }
     thead th {
-      padding: .5rem .7rem; text-align: right;
-      font-weight: 600; font-size: .63rem; text-transform: uppercase;
+      padding: .48rem .65rem; text-align: right;
+      font-size: .6rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: .4px; color: #60a5fa; white-space: nowrap;
       border-bottom: 1px solid #1e293b;
     }
@@ -155,43 +136,41 @@
     tbody tr:nth-child(odd)  { background: #0d1117; }
     tbody tr:nth-child(even) { background: #111827; }
     tbody tr:hover { background: #162032; }
-    tbody tr:last-child td { border-bottom: none; }
     tbody td {
-      padding: .35rem .7rem; text-align: right;
+      padding: .35rem .65rem; text-align: right;
       border-bottom: 1px solid #0f172a;
       font-variant-numeric: tabular-nums; color: #94a3b8; white-space: nowrap;
     }
     tbody td:first-child { text-align: left; color: #64748b; font-size: .76rem; }
+    tbody tr:last-child td { border-bottom: none; }
 
-    /* newest row highlight */
-    tbody tr.row-new td { background: #0f1f40 !important; color: #cbd5e1; font-weight: 600; }
-    tbody tr.row-new td:first-child { color: #93c5fd; }
-
-    .chg { font-weight: 700; }
+    /* latest row */
+    tbody tr.row-latest td { background: #0f2040 !important; }
+    tbody tr.row-latest td:first-child { color: #93c5fd; font-weight: 600; }
     .new-tag {
       display: inline-block; background: #1d4ed8; color: #bfdbfe;
-      font-size: .52rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .4px; padding: .06rem .32rem; border-radius: 3px;
-      margin-left: .3rem; vertical-align: middle;
+      font-size: .5rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .3px; padding: .06rem .3rem; border-radius: 3px;
+      margin-left: .28rem; vertical-align: middle;
     }
-    .empty-msg { color: #334155; font-size: .82rem; padding: 1.5rem; text-align: center; }
+
+    .chg { font-weight: 700; }
+    .empty-row { color: #334155; font-size: .82rem; padding: 1.5rem; text-align: center; }
 
     /* ── Footer ── */
-    footer {
-      text-align: center; font-size: .7rem; color: #334155;
-      padding: 1.25rem 0 2rem; border-top: 1px solid #0f172a;
-    }
-    footer a { color: #475569; text-decoration: none; }
+    footer { text-align: center; font-size: .7rem; color: #1e293b; padding: 1.5rem 0 2.5rem; border-top: 1px solid #0f172a; }
+    footer a { color: #334155; text-decoration: none; }
     footer a:hover { color: #60a5fa; }
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
-      .log-grid { grid-template-columns: 1fr; }
+      .history-grid { grid-template-columns: 1fr; }
     }
-    @media (max-width: 600px) {
-      .today-cards { grid-template-columns: 1fr; }
-      .stats-row   { grid-template-columns: repeat(2, 1fr); }
-      main { padding: 1rem .85rem 3rem; }
+    @media (max-width: 640px) {
+      .latest-cards { grid-template-columns: 1fr; }
+      .fields-grid  { grid-template-columns: repeat(2, 1fr); }
+      main { padding: 1.25rem .85rem 3rem; }
+      header { padding: .85rem 1rem; }
     }
   </style>
 </head>
@@ -199,47 +178,42 @@
 
 <header>
   <h1>DRAM &amp; NAND Flash Spot Prices</h1>
-  <div class="header-meta">
+  <div class="hdr-right">
     <span id="hdr-updated">Loading…</span>
-    <span class="dot">&middot;</span>
     <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange / TrendForce</a>
-    <span class="dot">&middot;</span>
     <a href="update.html">+ Add Entry</a>
   </div>
 </header>
 
 <main>
 
-  <!-- ════════════════════════════════════════════
-       TODAY'S UPDATE — always at the very top
-  ════════════════════════════════════════════ -->
-  <div class="today-block">
-    <div class="today-header">
-      <div class="today-badge">
-        <div class="pulse"></div>
-        <span>Latest Update</span>
-      </div>
-      <div class="today-date-row" id="today-date-row"></div>
+  <!-- ════════════════════════════════════════
+       LATEST UPDATE — always first
+  ════════════════════════════════════════ -->
+  <section class="latest-section">
+    <div class="latest-heading">
+      <div class="pulse-dot"></div>
+      <h2>Latest Update</h2>
+      <span class="latest-date-pill" id="latest-date-pill">—</span>
+      <span class="latest-sub-dates" id="latest-sub-dates"></span>
     </div>
-    <div class="today-cards" id="today-cards">
-      <div class="today-card empty">Loading…</div>
+    <div class="latest-cards" id="latest-cards">
+      <div class="price-card empty">Loading…</div>
     </div>
-  </div>
+  </section>
 
-  <!-- ════════════════════════════════════════════
-       RUNNING PRICE LOG — full history below
-  ════════════════════════════════════════════ -->
-  <div class="section-divider">
-    <div class="section-divider-label">
-      <span>Running Price Log</span>
-      <small>all entries &middot; newest first</small>
+  <!-- ════════════════════════════════════════
+       PRICE HISTORY — running list
+  ════════════════════════════════════════ -->
+  <section class="history-section">
+    <div class="history-heading">
+      <h2>Price History &mdash; All Entries</h2>
     </div>
-  </div>
-
-  <div class="log-grid">
-    <div class="log-col" id="ddr5-col"></div>
-    <div class="log-col" id="tlc-col"></div>
-  </div>
+    <div class="history-grid">
+      <div class="history-col" id="ddr5-col"></div>
+      <div class="history-col" id="tlc-col"></div>
+    </div>
+  </section>
 
 </main>
 
@@ -267,7 +241,7 @@
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function dir(v) {
+  function changeDir(v) {
     var n = parseFloat(String(v || '').replace(/[^0-9.\-+]/g, ''));
     if (isNaN(n)) { var s = String(v||''); return s.indexOf('+')>-1?'up':s.indexOf('-')>-1?'down':'flat'; }
     return n > 0 ? 'up' : n < 0 ? 'down' : 'flat';
@@ -277,50 +251,54 @@
     return d === 'up' ? '&#9650;&thinsp;' : d === 'down' ? '&#9660;&thinsp;' : '';
   }
 
-  function stat(label, val, cls) {
+  function field(label, val, cls) {
     var inner = cls
       ? '<span class="' + cls + '">' + arrow(cls) + esc(val) + '</span>'
       : esc(val);
-    return '<div class="stat-box">'
-      + '<div class="stat-label">' + label + '</div>'
-      + '<div class="stat-value">' + inner + '</div>'
+    return '<div class="field">'
+      + '<div class="field-label">' + label + '</div>'
+      + '<div class="field-value">' + inner + '</div>'
       + '</div>';
   }
 
-  function buildCard(row, type, name, sub) {
-    if (!row) return '<div class="today-card empty">No data yet.</div>';
-    var d = dir(row.session_change);
-    return '<div class="today-card ' + type + '">'
-      + '<div class="card-head">'
-        + '<div class="card-name-block">'
+  function buildCard(row, type, name, spec) {
+    if (!row) {
+      return '<div class="price-card empty">No data yet.</div>';
+    }
+    var d = changeDir(row.session_change);
+    return '<div class="price-card ' + type + '">'
+      + '<div class="card-top">'
+        + '<div class="card-identity">'
           + '<span class="chip chip-' + type + '">' + type.toUpperCase() + '</span>'
           + '<div>'
-            + '<div class="card-title">' + esc(name) + '</div>'
-            + '<div class="card-sub">'  + esc(sub)  + '</div>'
+            + '<div class="card-name">' + esc(name) + '</div>'
+            + '<div class="card-spec">' + esc(spec)  + '</div>'
           + '</div>'
         + '</div>'
-        + '<span class="card-date-pill">' + esc(fmtDate(row.date)) + '</span>'
+        + '<div class="card-entry-date">' + esc(fmtDate(row.date)) + '</div>'
       + '</div>'
-      + '<div class="stats-row">'
-        + stat('Weekly High',     row.weekly_high,    '')
-        + stat('Weekly Low',      row.weekly_low,     '')
-        + stat('Session High',    row.session_high,   '')
-        + stat('Session Low',     row.session_low,    '')
-        + stat('Session Average', row.session_avg,    '')
-        + stat('Avg Change',      row.session_change, d)
+      + '<div class="fields-grid">'
+        + field('Weekly High',     row.weekly_high)
+        + field('Weekly Low',      row.weekly_low)
+        + field('Session High',    row.session_high)
+        + field('Session Low',     row.session_low)
+        + field('Session Average', row.session_avg)
+        + field('Avg Change',      row.session_change, d)
       + '</div>'
     + '</div>';
   }
 
   function buildTable(rows) {
-    if (!rows || !rows.length) return '<p class="empty-msg">No history yet.</p>';
+    if (!rows || !rows.length) {
+      return '<p class="empty-row">No history yet.</p>';
+    }
     var rev = rows.slice().reverse();
     var trs = rev.map(function (r, i) {
-      var d = dir(r.session_change);
-      var isNew = i === 0;
+      var d = changeDir(r.session_change);
+      var isLatest = i === 0;
       var dateCell = esc(fmtDate(r.date))
-        + (isNew ? '<span class="new-tag">latest</span>' : '');
-      return '<tr' + (isNew ? ' class="row-new"' : '') + '>'
+        + (isLatest ? '<span class="new-tag">latest</span>' : '');
+      return '<tr' + (isLatest ? ' class="row-latest"' : '') + '>'
         + '<td>' + dateCell + '</td>'
         + '<td>' + esc(r.weekly_high)  + '</td>'
         + '<td>' + esc(r.weekly_low)   + '</td>'
@@ -330,7 +308,7 @@
         + '<td class="chg ' + d + '">' + arrow(d) + esc(r.session_change) + '</td>'
       + '</tr>';
     }).join('');
-    return '<div class="table-wrap"><table>'
+    return '<div class="tbl-wrap"><table>'
       + '<thead><tr>'
       + '<th>Date</th>'
       + '<th>Wk High</th><th>Wk Low</th>'
@@ -341,13 +319,13 @@
       + '</table></div>';
   }
 
-  function buildCol(el, rows, type, name, sub) {
+  function buildCol(el, rows, type, name, spec) {
     el.innerHTML =
-      '<div class="log-col-header">'
+      '<div class="col-label">'
         + '<span class="chip chip-' + type + '">' + type.toUpperCase() + '</span>'
         + '<h3>' + esc(name) + '</h3>'
-        + '<span class="sub">' + esc(sub) + '</span>'
-        + '<span class="count-badge">' + (rows ? rows.length : 0) + ' entries</span>'
+        + '<span class="col-sub">' + esc(spec) + '</span>'
+        + '<span class="entry-count">' + (rows ? rows.length : 0) + ' entries</span>'
       + '</div>'
       + buildTable(rows);
   }
@@ -356,22 +334,28 @@
     var latestDDR5 = data.ddr5[data.ddr5.length - 1] || null;
     var latestTLC  = data.tlc[data.tlc.length  - 1] || null;
 
-    /* header */
+    /* header last-updated */
     document.getElementById('hdr-updated').textContent =
       'Last updated: ' + (latestDDR5 ? fmtDate(latestDDR5.date) : '—');
 
-    /* today date row */
-    var parts = [];
-    if (latestDDR5) parts.push('DDR5 as of <strong>' + esc(fmtDate(latestDDR5.date)) + '</strong>');
-    if (latestTLC)  parts.push('TLC as of <strong>'  + esc(fmtDate(latestTLC.date))  + '</strong>');
-    document.getElementById('today-date-row').innerHTML = parts.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
+    /* date pill — use DDR5 date (updates daily) */
+    document.getElementById('latest-date-pill').textContent =
+      latestDDR5 ? fmtDate(latestDDR5.date) : '—';
 
-    /* latest cards */
-    document.getElementById('today-cards').innerHTML =
+    /* sub-dates when DDR5 and TLC are on different dates */
+    var subParts = [];
+    if (latestDDR5 && latestTLC && latestDDR5.date !== latestTLC.date) {
+      subParts.push('DDR5: <strong>' + esc(fmtDate(latestDDR5.date)) + '</strong>');
+      subParts.push('TLC: <strong>'  + esc(fmtDate(latestTLC.date))  + '</strong>');
+      document.getElementById('latest-sub-dates').innerHTML = subParts.join('&nbsp;&nbsp;&middot;&nbsp;&nbsp;');
+    }
+
+    /* latest price cards */
+    document.getElementById('latest-cards').innerHTML =
       buildCard(latestDDR5, 'dram', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz') +
       buildCard(latestTLC,  'nand', '512Gb TLC', 'NAND Flash Wafer');
 
-    /* running log */
+    /* running history tables */
     buildCol(document.getElementById('ddr5-col'),
       data.ddr5, 'dram', 'DDR5 16Gb (2Gx8)', '4800 / 5600 MHz');
     buildCol(document.getElementById('tlc-col'),
@@ -382,8 +366,8 @@
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(render)
     .catch(function (err) {
-      document.getElementById('today-cards').innerHTML =
-        '<div class="today-card empty">Failed to load data: ' + esc(err.message) + '</div>';
+      document.getElementById('latest-cards').innerHTML =
+        '<div class="price-card empty">Failed to load data: ' + esc(err.message) + '</div>';
     });
 })();
 </script>
