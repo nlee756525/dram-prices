@@ -125,6 +125,10 @@
   <div id="tlc-fields" class="disabled">
     <div class="fields">
       <div class="field">
+        <label>Entry Date (M/D/YYYY)</label>
+        <input type="text" id="tlc-date" placeholder="5/22/2026"/>
+      </div>
+      <div class="field">
         <label>Weekly High ($)</label>
         <input type="text" id="tlc-wh" placeholder="22.000"/>
       </div>
@@ -149,7 +153,7 @@
         <input type="text" id="tlc-sc" placeholder="+0.81"/>
       </div>
     </div>
-    <p class="hint" style="margin-top:.6rem">Only check this on weeks when DRAMeXchange shows a new 512Gb TLC price.</p>
+    <p class="hint" style="margin-top:.6rem">Only check this on weeks when DRAMeXchange shows a new 512Gb TLC price. The site posts it under the current week's date, but the price reflects the prior week's close — the Entry Date above defaults to 7 days before today so it matches the site's own dating; adjust it if needed.</p>
   </div>
 </div>
 
@@ -173,6 +177,12 @@
 
   function todayStr() {
     var d = new Date();
+    return (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
+  }
+
+  function weekAgoStr() {
+    var d = new Date();
+    d.setDate(d.getDate() - 7);
     return (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
   }
 
@@ -274,10 +284,12 @@
     /* TLC (optional) */
     var tlc = null;
     if (document.getElementById('tlc-enabled').checked) {
+      var tlcDateVal = document.getElementById('tlc-date').value.trim();
+      if (!tlcDateVal) { showStatus('err', '512Gb TLC entry date is required.'); return; }
       var tlcwh = document.getElementById('tlc-wh').value.trim();
       if (!tlcwh) { showStatus('err', '512Gb TLC values are required when the checkbox is checked.'); return; }
       tlc = {
-        date           : dateVal,
+        date           : tlcDateVal,
         weekly_high    : fmtPrice(document.getElementById('tlc-wh').value),
         weekly_low     : fmtPrice(document.getElementById('tlc-wl').value),
         session_high   : fmtPrice(document.getElementById('tlc-sh').value),
@@ -304,14 +316,14 @@
         added.push('DDR5');
 
         if (tlc) {
-          if (h.tlc.some(function (r) { return r.date === dateVal; })) {
-            throw new Error('512Gb TLC entry for ' + dateVal + ' already exists.');
+          if (h.tlc.some(function (r) { return r.date === tlc.date; })) {
+            throw new Error('512Gb TLC entry for ' + tlc.date + ' already exists.');
           }
           h.tlc.push(tlc);
-          added.push('512Gb TLC');
+          added.push('512Gb TLC (' + tlc.date + ')');
         }
 
-        showStatus('info', 'Pushing ' + added.join(' + ') + ' for ' + dateVal + '…');
+        showStatus('info', 'Pushing ' + added.join(' + ') + '…');
         return ghPut('history.json', JSON.stringify(h, null, 2),
                      'prices: add ' + dateVal, hFile.sha, token);
       })
@@ -330,13 +342,15 @@
           document.getElementById('tlc-enabled').checked = false;
           window.toggleTlc();
         }
-        /* advance date by 1 day for convenience */
-        var parts = document.getElementById('entry-date').value.trim().split('/');
-        if (parts.length === 3) {
-          var next = new Date(+parts[2], +parts[0] - 1, +parts[1] + 1);
-          document.getElementById('entry-date').value =
-            (next.getMonth() + 1) + '/' + next.getDate() + '/' + next.getFullYear();
-        }
+        /* advance both dates by 1 day for convenience */
+        [['entry-date'], ['tlc-date']].forEach(function (pair) {
+          var el = document.getElementById(pair[0]);
+          var parts = el.value.trim().split('/');
+          if (parts.length === 3) {
+            var next = new Date(+parts[2], +parts[0] - 1, +parts[1] + 1);
+            el.value = (next.getMonth() + 1) + '/' + next.getDate() + '/' + next.getFullYear();
+          }
+        });
       })
       .catch(function (e) {
         showStatus('err', '❌ ' + e.message);
@@ -351,6 +365,7 @@
     var saved = localStorage.getItem(TOKEN_KEY);
     if (saved) document.getElementById('gh-token').value = saved;
     document.getElementById('entry-date').value = todayStr();
+    document.getElementById('tlc-date').value = weekAgoStr();
   });
 })();
 </script>

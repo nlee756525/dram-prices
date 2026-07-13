@@ -11,7 +11,7 @@ import base64
 import urllib.request
 import os
 import traceback
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from playwright.async_api import async_playwright
 
@@ -31,8 +31,8 @@ def load_config():
     }
 
 # ── Formatters ────────────────────────────────────────────────────────────────
-def today_str():
-    d = date.today()
+def today_str(offset_days=0):
+    d = date.today() + timedelta(days=offset_days)
     return f"{d.month}/{d.day}/{d.year}"
 
 def price(v):
@@ -166,7 +166,7 @@ async def scrape_dramexchange():
             except ValueError:
                 return False
 
-        async def read_row(*keywords):
+        async def read_row(*keywords, date_offset_days=0):
             """Try each keyword; scan all matching rows and return first with real price data."""
             for kw in keywords:
                 locs = page.locator("tr").filter(has_text=kw)
@@ -182,7 +182,7 @@ async def scrape_dramexchange():
                     if valid >= 3:
                         print(f"  Matched '{kw}' row[{i}] ({valid}/5 price fields): {texts[:7]}")
                         return {
-                            "date":           today_str(),
+                            "date":           today_str(date_offset_days),
                             "weekly_high":    price(texts[1]),
                             "weekly_low":     price(texts[2]),
                             "session_high":   price(texts[3]),
@@ -195,7 +195,10 @@ async def scrape_dramexchange():
             return None
 
         ddr5 = await read_row("4800/5600", "4800 / 5600", "DDR5 16Gb")
-        tlc  = await read_row("512Gb TLC", "512GB TLC", "512 Gb TLC")
+        # DRAMeXchange posts the 512Gb TLC wafer print under the current week's
+        # date, but the price itself reflects the prior week's close — record it
+        # dated one week back so history.json matches the DRAM site's own dating.
+        tlc  = await read_row("512Gb TLC", "512GB TLC", "512 Gb TLC", date_offset_days=-7)
         await browser.close()
         return ddr5, tlc
 

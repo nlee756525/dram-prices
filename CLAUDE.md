@@ -123,6 +123,24 @@ on a GitHub Pages dashboard:
 Fields captured per row: Weekly High, Weekly Low, Session High, Session Low,
 Session Average, Average Change (%).
 
+### 512Gb TLC dating rule — always one week back
+
+DRAMeXchange posts the 512Gb TLC wafer print under the current week's date, but
+the price shown reflects the **prior** week's close. `history.json`'s `date`
+field for every TLC entry must match the DRAM site's own dating, one week
+behind the day the print actually appeared:
+
+- `scrape.py` implements this automatically — the TLC row is recorded with
+  `date_offset_days=-7` in `read_row()` (see `scrape_dramexchange()`), so a
+  print that appears on the site on a Monday is stored dated the **prior**
+  Monday. DDR5 is unaffected and keeps the real scrape date.
+- `update.html` has a separate "Entry Date" field inside the 512Gb TLC panel
+  (distinct from the DDR5 date field) that defaults to **today − 7 days** for
+  this same reason. Do not reuse the DDR5 date for a manual TLC entry.
+- If you ever see the dashboard's TLC date matching "today" instead of a week
+  ago, the offset was applied backwards or dropped — check `date_offset_days`
+  in `scrape.py` and the `weekAgoStr()` default in `update.html`.
+
 ---
 
 ## Architecture
