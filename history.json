@@ -476,6 +476,15 @@
       "session_low": "$32.000",
       "session_avg": "$49.333",
       "session_change": "+0.89%"
+    },
+    {
+      "date": "7/17/2026",
+      "weekly_high": "$65.000",
+      "weekly_low": "$32.000",
+      "session_high": "$65.000",
+      "session_low": "$32.000",
+      "session_avg": "$49.667",
+      "session_change": "+0.68%"
     }
   ],
   "tlc": [
