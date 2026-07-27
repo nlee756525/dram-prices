@@ -530,6 +530,15 @@
       "session_low": "$32.500",
       "session_avg": "$50.833",
       "session_change": "+0.66%"
+    },
+    {
+      "date": "7/27/2026",
+      "weekly_high": "$66.500",
+      "weekly_low": "$32.500",
+      "session_high": "$66.500",
+      "session_low": "$32.500",
+      "session_avg": "$50.833",
+      "session_change": "0.00%"
     }
   ],
   "tlc": [
@@ -631,6 +640,15 @@
       "session_low": "$15.500",
       "session_avg": "$19.176",
       "session_change": "-0.61%"
+    },
+    {
+      "date": "7/20/2026",
+      "weekly_high": "$20.000",
+      "weekly_low": "$15.000",
+      "session_high": "$20.000",
+      "session_low": "$15.000",
+      "session_avg": "$18.931",
+      "session_change": "-1.28%"
     }
   ]
 }
