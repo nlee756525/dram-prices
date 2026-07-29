@@ -15,3 +15,4 @@ python scrape.py >> "%~dp0scraper.log" 2>&1
 :: routine-trigger: nudge Actions push trigger 2026-07-24T10:45 (scheduled cron runs found no update after ~9min wait)
 :: routine-trigger: nudge Actions push trigger 2026-07-27T10:40 (scheduled cron runs found no update after ~5min wait)
 :: routine-trigger: nudge Actions push trigger 2026-07-28T10:35 (history.json stale — no DDR5 entry for today)
+REM routine nudge 2026-07-29T06:35
