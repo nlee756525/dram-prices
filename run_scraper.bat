@@ -17,3 +17,4 @@ python scrape.py >> "%~dp0scraper.log" 2>&1
 :: routine-trigger: nudge Actions push trigger 2026-07-28T10:35 (history.json stale — no DDR5 entry for today)
 REM routine nudge 2026-07-29T06:35
 REM routine nudge 2026-07-30T10:51 (scheduled cron runs found no update after ~17min wait)
+REM routine nudge 2026-07-31T10:51 (scheduled cron runs found no update after ~20min wait)
