@@ -18,3 +18,4 @@ python scrape.py >> "%~dp0scraper.log" 2>&1
 REM routine nudge 2026-07-29T06:35
 REM routine nudge 2026-07-30T10:51 (scheduled cron runs found no update after ~17min wait)
 REM routine nudge 2026-07-31T10:51 (scheduled cron runs found no update after ~20min wait)
+REM routine nudge 2026-08-03T10:52 (scheduled cron runs found no update after ~22min wait)
